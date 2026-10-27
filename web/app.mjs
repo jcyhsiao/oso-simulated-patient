@@ -132,6 +132,7 @@ function model() {
   return { name: byId('case-name').value, role: byId('learner-role').value, description: byId('case-description').value,
     groups, preset: byId('feedback-preset').value, presetSnapshot,
     composition: document.querySelector('input[name=composition]:checked')?.value || '',
+    unlistedSymptoms: document.querySelector('input[name=unlisted-symptoms]:checked')?.value || 'neutral',
     format: 'carmen',
     roles: roles.map(r => ({ ...r })) };
 }
@@ -314,6 +315,7 @@ for (const id of ['case-name', 'learner-role', 'case-description']) byId(id).add
 function chooseCurrentPreset() { const key = byId('feedback-preset').value; presetSnapshot = key === 'none' ? null : { ...APP_CONTENT.presets[key], key, version: APP_CONTENT.version }; update(); }
 byId('feedback-preset').addEventListener('change', chooseCurrentPreset);
 byId('update-preset').addEventListener('click', chooseCurrentPreset); document.querySelectorAll('input[name=composition]').forEach(input => input.addEventListener('change', update));
+document.querySelectorAll('input[name=unlisted-symptoms]').forEach(input => input.addEventListener('change', update));
 byId('build').addEventListener('click', buildPackage);
 byId('copy-instructions')?.addEventListener('click', async () => {
   const text = byId('generated-preview').textContent;
@@ -382,6 +384,7 @@ caseSession = setupCaseSession({
     for (const [key, refs] of groupElements) { groups[key] = state ? state.groups[key] : { text: '', files: [] }; refs.text.value = groups[key].text; refs.file.value = ''; renderFiles(key); }
     presetSnapshot = state?.presetSnapshot || null; byId('feedback-preset').value = state?.preset || 'none';
     for (const input of document.querySelectorAll('input[name=composition]')) input.checked = input.value === state?.composition;
+    for (const input of document.querySelectorAll('input[name=unlisted-symptoms]')) input.checked = input.value === (state?.unlistedSymptoms || 'neutral');
     showStep(record?.view.step ?? 0); showArea(record?.view.area || AREA_KEYS[0]); update();
   },
   lock: locked => { document.querySelector('.sp-workspace').inert = locked; document.querySelector('.sp-steps').inert = locked; for (const button of document.querySelectorAll('#case-toolbar button')) button.disabled = locked; },

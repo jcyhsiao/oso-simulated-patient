@@ -203,8 +203,8 @@ test('online simulation, human timekeeping, authorized record rules, and closed-
   assert.match(text, /Patient-provided record:/);
   assert.match(text, /Simulation facilitator:/);
   assert.match(text, /Visual vs\. diagnostic requests:/);
-  assert.match(text, /If the learner asks about a symptom or complaint not listed as present/);
-  assert.match(text, /If the learner asks for biographical, lifestyle, dietary, or historical details not specified/);
+  assert.match(text, /Symptoms the materials neither list as present nor explicitly deny are UNSPECIFIED/);
+  assert.match(text, /Biographical, lifestyle, dietary or historical details not in the materials/);
   assert.match(text, /Unsupplied exams, labs, and imaging \(STRICT ZERO-FABRICATION RULE\):/);
   assert.match(text, /When a source document lists history in an HPI or OLD CARTS table/);
   assert.match(text, /Boundary: Concealed facilitator reference\./);

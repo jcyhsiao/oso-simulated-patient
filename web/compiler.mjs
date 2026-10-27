@@ -161,11 +161,21 @@ export function compileEncounter(model, content) {
 
   const identity = `Case: ${name}\nLearner role: ${role}${activeRoles.length > 1 ? `\nParticipating professions: ${roleListing}` : ''}\n${model.description?.trim() ? '\nCase description:\n' + model.description.trim() + '\n' : ''}`;
 
+  if (!content.runtime.includes('[[UNLISTED_DETAIL_POLICY]]')) {
+    throw new Error('Runtime is missing the unlisted-detail policy marker.');
+  }
+
+  const unlistedPolicy = model.unlistedSymptoms === 'deny'
+    ? `- Faculty policy for this case: if the learner asks about a symptom or complaint the materials do not list as present, answer with a natural lay negative (e.g., "No, I haven't noticed anything like that"). This applies to symptoms only.\n- Biographical, lifestyle, dietary or historical details not in the materials: reply briefly in character that you are not sure or have nothing particular to add. Apart from the symptom rule above, unspecified information is never converted into a positive or negative finding.`
+    : `- Symptoms the materials neither list as present nor explicitly deny are UNSPECIFIED. Do not invent them and do not deny them as a fact. Reply with brief, non-committal lay uncertainty (e.g., "Hmm, that's not something I've really paid attention to"). State explicitly supplied negatives as written.\n- Biographical, lifestyle, dietary or historical details not in the materials: reply briefly in character that you are not sure or have nothing particular to add. Unspecified information is never converted into a positive or negative finding.`;
+
+  const renderedRuntime = content.runtime.replace('[[UNLISTED_DETAIL_POLICY]]', unlistedPolicy);
+
   const directInstructions = `# ${name} — Simulated Patient Instructions
 
 ${identity}
 
-${content.runtime}
+${renderedRuntime}
 
 REQUIRED CONTEXT: Read the complete inline case and selected feedback below before the first response. All required text is embedded; no external retrieval or upload is required. If required context is lost, stop and ask the instructor to restore setup.
 
@@ -186,7 +196,7 @@ END INLINE CASE
     return { errors, warnings, files: [], instructionCounts };
   }
 
-  const manifest = { schema_version: 1, builder_version: content.version, case_name: name, learner_role: role, participating_roles: activeRoles.map(r => ({ id: r.id, title: r.title.trim(), isCustom: Boolean(r.isCustom) })), export_format: 'carmen', feedback: { preset: feedback.usePreset ? model.preset : null, preset_version: feedback.usePreset ? model.presetSnapshot?.version || content.version : null, custom: feedback.custom, composition: feedback.custom ? feedback.usePreset ? 'supplement' : 'custom-only' : null }, counts: instructionCounts, sources: Object.fromEntries(Object.entries(model.groups).map(([key, group]) => [key, includedSources(group).map(s => s.label)])), assets: assetFiles.map(a => a.path) };
+  const manifest = { schema_version: 1, builder_version: content.version, case_name: name, learner_role: role, participating_roles: activeRoles.map(r => ({ id: r.id, title: r.title.trim(), isCustom: Boolean(r.isCustom) })), export_format: 'carmen', unlisted_symptoms: model.unlistedSymptoms === 'deny' ? 'deny' : 'neutral', feedback: { preset: feedback.usePreset ? model.preset : null, preset_version: feedback.usePreset ? model.presetSnapshot?.version || content.version : null, custom: feedback.custom, composition: feedback.custom ? feedback.usePreset ? 'supplement' : 'custom-only' : null }, counts: instructionCounts, sources: Object.fromEntries(Object.entries(model.groups).map(([key, group]) => [key, includedSources(group).map(s => s.label)])), assets: assetFiles.map(a => a.path) };
 
   const files = [
     { name: `${slug}-carmen-instructions.md`, data: directInstructions, type: 'text/markdown;charset=utf-8' }

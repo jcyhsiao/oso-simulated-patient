@@ -16,7 +16,7 @@ function caseFixture() {
 test('editable backups round-trip all groups, settings, image review and bytes', async () => {
   const original = normalizeCaseSnapshot(caseFixture()); const restored = await decodeCaseBackup(encodeCaseBackup(original));
   assert.deepEqual(restored, original);
-  const content = { version: 'new', runtime: 'Runtime', presets: { fnp: { title: 'Changed preset', text: 'NEW PRESET' } } };
+  const content = { version: 'new', runtime: 'Runtime [[UNLISTED_DETAIL_POLICY]]', presets: { fnp: { title: 'Changed preset', text: 'NEW PRESET' } } };
   const before = compileEncounter(original.model, content), after = compileEncounter(restored.model, content);
   assert.deepEqual(after, before); assert.match(after.feedbackText, /ORIGINAL PRESET/); assert.doesNotMatch(after.feedbackText, /NEW PRESET/);
   assert.equal(after.manifest.feedback.preset_version, 'old');

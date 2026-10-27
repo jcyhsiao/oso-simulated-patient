@@ -24,7 +24,8 @@ function caseImage(image) {
 }
 export function cleanCaseModel(model) {
   const rawFormat = model?.format || 'carmen';
-  if (!model || !['none', 'fnp', 'ipe'].includes(model.preset) || !['carmen', 'canvas-direct', 'synthesis', 'single', 'skills'].includes(rawFormat) || !['', 'supplement', 'replace'].includes(model.composition)) throw new Error('Invalid case settings.');
+  const unlistedSymptoms = model?.unlistedSymptoms || 'neutral';
+  if (!model || !['none', 'fnp', 'ipe'].includes(model.preset) || !['carmen', 'canvas-direct', 'synthesis', 'single', 'skills'].includes(rawFormat) || !['', 'supplement', 'replace'].includes(model.composition) || !['neutral', 'deny'].includes(unlistedSymptoms)) throw new Error('Invalid case settings.');
   const format = 'carmen';
   const groups = Object.fromEntries(CASE_GROUP_KEYS.map(key => {
     const group = model.groups?.[key];
@@ -45,7 +46,7 @@ export function cleanCaseModel(model) {
     presetSnapshot = { key: preset.key, title: caseString(preset.title), text: caseString(preset.text), description: caseString(preset.description || ''), version: caseString(preset.version) };
   }
   const roles = Array.isArray(model.roles) ? model.roles.map(caseRole) : [];
-  return { name: caseString(model.name), role: caseString(model.role), description: caseString(model.description), groups, preset: model.preset, presetSnapshot, composition: model.composition, format, roles };
+  return { name: caseString(model.name), role: caseString(model.role), description: caseString(model.description), groups, preset: model.preset, presetSnapshot, composition: model.composition, format, roles, unlistedSymptoms };
 }
 export function normalizeCaseSnapshot(snapshot) {
   if (!snapshot || snapshot.schema_version !== 1) throw new Error('Unsupported case version. Keep a backup and open it with a compatible builder.');
