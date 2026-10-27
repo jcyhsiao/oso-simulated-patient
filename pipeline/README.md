@@ -1,5 +1,7 @@
 # Shared simulation compilation
 
+> **Legacy (October 27, 2026):** The Python CLI pipeline is kept for reference and its existing regression tests only. It is not the faculty workflow and should not be extended. Faculty and faculty developers use the browser builder ([simulated-patient-builder.html](../web/dist/simulated-patient-builder.html)), which compiles a single instruction file for Carmen AI Assistant. See [web/README.md](../web/README.md).
+
 The build reads explicitly supplied case/activity content. It contains no
 patient-name, diagnosis, image-location or case-specific sentence replacements.
 

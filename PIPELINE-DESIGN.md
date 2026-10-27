@@ -1,5 +1,7 @@
 # Reusable simulated-patient pipeline
 
+> **Legacy (October 27, 2026):** The Python CLI pipeline is kept for reference and its existing regression tests only. It is not the faculty workflow and should not be extended. Faculty and faculty developers use the browser builder ([simulated-patient-builder.html](web/dist/simulated-patient-builder.html)), which compiles a single instruction file for Carmen AI Assistant. See [web/README.md](web/README.md).
+
 Design decision recorded October 22, 2026. Shannon Anderson is the reference implementation. This document defines the intended architecture; the current builder remains Shannon-specific. No second case, general compiler, intervention engine, or scoring system has been implemented.
 
 ## Separate the person from the learning activity

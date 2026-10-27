@@ -1,5 +1,7 @@
 # Install the packaged Shannon Anderson pilot
 
+> **Legacy (October 27, 2026):** The Python CLI pipeline is kept for reference and its existing regression tests only. It is not the faculty workflow and should not be extended. Faculty and faculty developers use the browser builder ([simulated-patient-builder.html](web/dist/simulated-patient-builder.html)), which compiles a single instruction file for Carmen AI Assistant. See [web/README.md](web/README.md).
+
 For project history, portability, current verification, and pending refinements, see [HANDOFF.md](HANDOFF.md).
 
 This pilot uses reusable agent Instructions plus one case skill. It does not require GitLab, web search, knowledge-file uploads, student skill installation, or an activation phrase. Students greet the patient as they would in a real visit.

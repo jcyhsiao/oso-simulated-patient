@@ -2,32 +2,33 @@
 
 Updated October 27, 2026. Instructor/developer context only: do not paste this handoff into a patient agent or give it to learners. Paths are relative to this project so the entire folder can be moved. This document consolidates the earlier incremental notes and describes the current state.
 
-## Direct Canvas AI Assistant compilation, restored runtime baseline & closed-world anti-hallucination rules (October 27, 2026)
+> **Current direction (October 27, 2026):** The browser builder ([simulated-patient-builder.html](web/dist/simulated-patient-builder.html)) is the only faculty workflow and targets **Carmen AI Assistant** with a single instruction file (`*-carmen-instructions.md`) strictly under 48,000 maximum units. The Python CLI pipeline (`pipeline/`, `scripts/`, `packages/`) is **legacy**: kept for reference and regression tests, not to be extended.
 
-- **Direct-Only Compilation for Canvas AI Assistant (No AI Middleman):**
-  - Removed the intermediate Gemini/Copilot synthesis prompt workflow after live testing showed that external chat UIs could not reliably trigger markdown file downloads and that LLM prompt synthesis stripped critical runtime rules (such as `"Patient-provided record:"` vs. `"Simulation facilitator:"` ownership) and hallucinated unscripted clinical findings.
-  - Step 4 of the Web Builder (`web/compiler.mjs`, `web/app.mjs`, `web/index.template.html`) now compiles a single production-ready Canvas AI Assistant instruction file (`${slug}-canvas-instructions.md`) directly in the browser and enforces a strict `< 48,000` maximum-unit budget (`Math.max(utf16, crlf, utf8)`).
+## Direct Carmen AI Assistant compilation & architectural decisions (October 27, 2026)
 
-- **Restored `ce18b42` Runtime Baseline + Closed-World Anti-Hallucination Hardening (`web/content/runtime.md`):**
-  - Restored all original tested runtime sections from commit `ce18b42` (`ONLINE SIMULATION AND HUMAN TIMING`, `ROLE AND KNOWLEDGE BOUNDARIES`, `NATURAL ENTRY, PROGRESSIVE DISCLOSURE AND UNSCRIPTED QUESTIONS`, `LEARNER AND COURSE CONTEXT`, `RECORDS, FINDINGS AND AUTHORIZED DELIVERY`, `EXPLICIT CONSULTANT CONTENT`, `PLANS AND CLOSURE`, `EVIDENCE AND PRELIMINARY FEEDBACK`), tightened to `11,977` maximum units (`12,044` bytes).
-  - Hardened the three live-test failure modes identified in Canvas AI Assistant:
-    1. **Unscripted patient history/symptom questions:** Explicit rule distinguishing unscripted symptom inquiries (respond with a natural lay negative, e.g., *"No, I haven't noticed anything like that"*) from unscripted biographical/lifestyle/history details (respond briefly in character with lay uncertainty, e.g., *"I'm not really sure"* or *"Nothing special that I can think of"*).
-    2. **Unsupplied physical exam, laboratory, or imaging requests:** Explicit zero-fabrication rule prohibiting invented normal or abnormal exam findings, vitals, labs, or imaging; unsupplied requests return `"Simulation facilitator: No scripted findings or records are available in this case for the requested examination or study."`
-    3. **HPI / OLD CARTS tables & grader commentary:** Explicit rule treating each row of an HPI or OLD CARTS table as a separate attribute disclosed only when specifically asked (1–2 sentences per turn), and ignoring grader-facing headings (such as *"If asked during the visit"*) alongside section-level boundary reminders in `web/compiler.mjs` (`AREA_BOUNDARIES`).
+- **Single Export File for Carmen AI Assistant (No Modular/Skill ZIP, No Middlemen):**
+  - Live testing demonstrated that conversational hosts (Carmen AI Assistant / Gems / skills) cannot reliably process modular multi-file ZIP skills and that intermediate LLM synthesis stripped critical runtime rules while hallucinating unscripted findings.
+  - Step 3 (Export) in the builder compiles a single ready-to-copy instruction file (`${slug}-carmen-instructions.md`) and enforces a strict `< 48,000` maximum-unit budget (`Math.max(utf16, crlf, utf8)`).
+  - Headroom warning: when instructions reach or exceed 45,000 units, a non-blocking amber warning is surfaced. A collapsible unit breakdown table (`areaCounts`) shows exact unit allocation across sections in both success and error states.
 
-- **Under 48,000 Units Optimization (Shannon Anderson Benchmark):**
-  - `web/imports.mjs`: Normalized horizontal whitespace runs (`/[ \t]+/g` -> `' '`) in `paragraphText()` so Word layout tab sequences (`<w:tab/>` runs in `Faculty Sheet for Gout OSCE SP 2026.docx`) are stripped on import.
-  - `web/compiler.mjs`: Added `compactSourceText()` to normalize horizontal whitespace, collapse redundant blank lines between consecutive bullet items, and collapse `\n{3,}` to `\n\n`, plus `pruneProfessionalScope()` to strip authoring/review metadata from role profiles.
-  - Compiling all 9 `.docx` files in `case-files/fnp-shannon-anderson` with the `FNP OSCE` preset and `Primary Care` role profile produces **44,282 maximum units** (~40,500 maximum units when the duplicate March 2025 lab report is not uploaded twice), well under the `48,000` unit limit.
+- **Per-Case Unlisted-Symptom Policy (`unlistedSymptoms`):**
+  - Replaced the earlier blanket denial with a per-case faculty setting defaulting to `'neutral'` (non-committal lay uncertainty: *"Hmm, that's not something I've really paid attention to"*) with an optional `'deny'` setting (*"No, I haven't noticed anything like that"*).
+  - Runtime dynamically injects the policy via the `[[UNLISTED_DETAIL_POLICY]]` marker in `web/content/runtime.md`. Unspecified biographical/lifestyle details always receive brief lay uncertainty.
 
-- **Modular IPE Professional Roles Library in Step 1:**
-  - Embedded 11 case-agnostic professional role profiles into `web/content/professionals/` (Dental Hygiene, Dentistry, Dermatology, ENT, Environmental Health, Housing Advocacy, Nursing, Occupational Therapy, Physical Therapy, Primary Care, Social Work).
-  - Implemented multi-select toggle chips, on-the-fly custom role creation, editable scope accordions, and automatic synchronization with `#learner-role`.
-  - Added Buckeye UX `.sp-context` AI provenance notices indicating profiles are starter drafts for faculty review.
+- **Bundled Professional Role Profiles as Learner Roles:**
+  - All 11 profiles in `web/content/professionals/` were rewritten from legacy consultant behavior to general learner-role profiles under 5 standard headings (`## Role and scope`, `## Typical focus in a patient encounter`, `## Contributions within scope`, `## Scope considerations for feedback`, `## Interprofessional collaboration`).
+  - Total profile library size: 13,869 characters (all 11 profiles individually between 1,174 and 1,295 chars; total <= 14,000 chars).
+  - Role scope text is preserved verbatim without silent pruning (`pruneProfessionalScope()` was deleted) and is emitted in a dedicated `# Learner audience and professional scope` section outside the inline case block, completely decoupled from feedback selection.
+  - The `Learner role` field is developer-entered and is never overwritten by chip selection; active chips supplement the identity block (`Selected professional roles: ...`).
 
-- **Verification:**
-  - All 19 Node unit tests (`npm test`, including an automated regression test compiling `case-files/fnp-shannon-anderson` under 48,000 units) and all 65 Python unit tests (`python3 -B -m unittest discover -s tests`) pass.
-  - Standalone build (`web/dist/simulated-patient-builder.html`) and static entry (`web/dist/index.html`) rebuilt byte-identically (`1,508,041` bytes each).
+- **Strict Separation of Case Facts from Builder & Tests:**
+  - Zero hardcoded case names, diagnoses, medications, body sites, or case file paths in `web/**` or committed tests.
+  - Real case folders are audited using the generic CLI runner `web/tests/folder-check.cjs <folder>`.
+
+- **Current Verification & Build Sizes:**
+  - Rebuilt standalone artifact (`web/dist/simulated-patient-builder.html`) and static entry (`web/dist/index.html`): byte-identical, **1,490,940 bytes** each.
+  - All 21 Node unit tests (`npm test`) pass.
+  - All 65 Python unit tests (`python3 -B -m unittest discover -s tests`) pass.
 
 ## Web builder table extraction and visual exam scoping (October 27, 2026)
 

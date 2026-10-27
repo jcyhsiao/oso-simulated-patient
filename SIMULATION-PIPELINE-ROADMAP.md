@@ -1,5 +1,7 @@
 # Shared simulated patient pipeline roadmap
 
+> **Legacy (October 27, 2026):** The Python CLI pipeline is kept for reference and its existing regression tests only. It is not the faculty workflow and should not be extended. Faculty and faculty developers use the browser builder ([simulated-patient-builder.html](web/dist/simulated-patient-builder.html)), which compiles a single instruction file for Carmen AI Assistant. See [web/README.md](web/README.md).
+
 Agreed direction October 26 2026. Main project: FNP Simulated Patient at
 `/Users/hsiao.62/Developer/skills/con-simulated-patient`.
 This roadmap records intended work. It does not change runtime behavior or

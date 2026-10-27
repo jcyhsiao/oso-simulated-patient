@@ -1,5 +1,7 @@
 # Simulated patient builder and pipeline
 
+> **Current direction (October 27, 2026):** The browser builder ([simulated-patient-builder.html](web/dist/simulated-patient-builder.html)) is the only faculty workflow. It compiles a single instruction file for Carmen AI Assistant, with no terminal or Python steps. The Python CLI pipeline (`scripts/`, `pipeline/`, `packages/`) and the Shannon CLI outputs below are **legacy**: kept for reference and regression tests, not to be extended. Pending builder corrections: [IMPLEMENTATION-PROPOSAL-2026-10-27.md](IMPLEMENTATION-PROPOSAL-2026-10-27.md).
+
 A browser-local package builder plus a portable, faculty-review Shannon Anderson reference case for MSN Family Nurse Practitioner encounters. Students begin with a natural greeting. Runtime case revision: `2026-10-21-copilot-pilot-7`.
 
 Open **[the standalone builder](web/dist/simulated-patient-builder.html)** directly

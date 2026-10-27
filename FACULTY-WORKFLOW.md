@@ -1,5 +1,7 @@
 # Faculty and developer workflow
 
+> **Legacy (October 27, 2026):** The Python CLI pipeline is kept for reference and its existing regression tests only. It is not the faculty workflow and should not be extended. Faculty and faculty developers use the browser builder ([simulated-patient-builder.html](web/dist/simulated-patient-builder.html)), which compiles a single instruction file for Carmen AI Assistant. See [web/README.md](web/README.md).
+
 The faculty member supplies and reviews the educational case; the developer or authoring assistant turns it into structured inputs, builds the package and checks it. Faculty can continue using Word documents, reports and images. Faculty does not need to write JSON. There is no automated arbitrary-document importer or faculty form application yet.
 
 ## What faculty supplies

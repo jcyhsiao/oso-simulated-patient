@@ -1,5 +1,7 @@
 # Simulated patient package builder implementation proposal
 
+> **Product decision (October 27, 2026):** The builder targets **Carmen AI Assistant** exclusively, exporting a single instruction file (`*-carmen-instructions.md`) strictly under 48,000 maximum units. The earlier multi-file skill ZIP, setup-guide downloads, and intermediate LLM synthesis options described in sections below have been retired. Direct browser compilation with no AI middleman is the authoritative workflow. See [web/README.md](web/README.md) and [HANDOFF.md](HANDOFF.md).
+
 Planning agreed October 26, 2026; initial local implementation completed
 October 27, 2026. Open web/dist/simulated-patient-builder.html directly in a
 current browser. The same self-contained artifact is available as web/dist/index.html
