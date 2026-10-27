@@ -2,6 +2,35 @@
 
 Updated October 27, 2026. Instructor/developer context only: do not paste this handoff into a patient agent or give it to learners. Paths are relative to this project so the entire folder can be moved. This document consolidates the earlier incremental notes and describes the current state.
 
+## Direct Canvas AI Assistant compilation & IPE multi-role architecture (October 27, 2026)
+
+- **Eliminated AI Middleman Friction:**
+  - Transitioned the Web Builder's primary output from an intermediate meta-synthesis prompt (which required faculty to copy to Gemini/Copilot, where chat UIs failed to download markdown files and unconstrained models hallucinated unscripted facts) to **Direct System Instructions for Canvas AI Assistant**.
+  - Faculty click **"Compile instructions"** and can immediately **"Copy instructions to clipboard"** or **"Download instructions (.md)"**, pasting straight into Canvas AI Assistant.
+  - A fallback expandable accordion still provides the Gemini/Copilot synthesis prompt if faculty ever assemble an abnormally large 60k+ unit scenario.
+
+- **Under 48,000 Units Optimization (Shannon Anderson Benchmark):**
+  - Shannon Anderson previously produced 52,542 units, tripping the 50,000 safety threshold.
+  - Reduced the case to **39,824 maximum units** (38,789 UTF-16 characters), leaving **8,176 units of safe headroom** under the 48,000 unit Canvas guideline:
+    1. **Streamlined `runtime.md`:** Cut from 12,411 to 4,522 characters by removing repetitive commentary about classroom logistics/timers while strictly maintaining the 3-tier architecture, progressive disclosure (1–2 sentences), and closed-world constraints.
+    2. **DOCX Extraction Whitespace Normalization:** Cleaned up Word table/paragraph bloat by collapsing `\n{3,}` to `\n\n`.
+    3. **Professional Scope Pruning:** Stripped authoring and review metadata from role profiles via `pruneProfessionalScope()`.
+
+- **Strict Closed-World Negative Constraint (Zero Hallucination Standard):**
+  - Added explicit anti-hallucination rules to `web/content/runtime.md` and the compiler:
+    - **Patient Persona (Tier 1):** Knows ONLY what is explicitly documented in the prompt. When asked about unscripted symptoms, habits, family, or past events, the patient MUST respond with a natural layperson negative or uncertainty (*"No, I haven't noticed that"*, *"Not that I know of"*, *"I don't recall"*).
+    - **Facilitator Evidence Delivery (Tier 2):** When a student orders an unscripted lab, exam, or imaging test, the facilitator responds: `[FACILITATOR / CLINICAL DATA DELIVERY] Requested Item: <item>. Findings: Not performed / No records available for this encounter.` Speculative or fabricated clinical reports are strictly prohibited.
+
+- **Modular IPE Professional Roles Library in Step 1:**
+  - Embedded 11 case-agnostic professional role profiles into `web/content/professionals/` (Dental Hygiene, Dentistry, Dermatology, ENT, Environmental Health, Housing Advocacy, Nursing, Occupational Therapy, Physical Therapy, Primary Care, Social Work).
+  - Implemented multi-select toggle chips, on-the-fly custom role creation, editable scope accordions, and automatic synchronization with `#learner-role`.
+  - Added Buckeye UX `.sp-context` AI provenance notices indicating profiles are starter drafts for faculty review.
+
+- **Verification:**
+  - All 18 unit tests in `npm test` passing (`case-storage.test.mjs` and `compiler.test.mjs`).
+  - Tested directly against `case-files/fnp-shannon-anderson` (39,824 max units, 0 errors, 0 warnings).
+  - Standalone build (`web/dist/simulated-patient-builder.html`) and static entry (`web/dist/index.html`) rebuilt byte-identically (1,507,903 bytes) and pushed to GitHub `main` (`17d4f76`), triggering automatic Vercel deployment.
+
 ## Web builder table extraction and visual exam scoping (October 27, 2026)
 
 - **Visual vs. diagnostic record scoping**: Resolved model oversharing where asking to see or examine the left foot triggered an immediate verbatim dump of all patient-held laboratory and radiology records.
