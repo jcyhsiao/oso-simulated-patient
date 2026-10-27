@@ -8,7 +8,7 @@ build command require Node.js 22 or later, with no npm dependencies.
 
 ## Use
 
-1. Enter a case name and learner role. Optionally paste/upload course context.
+1. Enter a case name, select learner audience roles from presets or custom inputs, and review role scopes. Optionally paste/upload course context.
 2. Paste/upload material in the four role-scoped areas. Patient text is required;
    the other three areas are optional. Text and files are additive; pasted text
    comes first, followed by the listed files. Inspect, reorder, replace or remove
