@@ -267,11 +267,53 @@ for (const target of document.querySelectorAll('[data-input-group]')) {
   const list = element('ul', undefined, 'sp-files'); list.setAttribute('aria-label', `${AREA_LABELS[key]} attached files`); list.setAttribute('aria-live', 'polite');
   target.append(label, fileLabel, note, list); groupElements.set(key, { text, file, list });
 }
+function renderAreaBreakdown(target, areaCounts) {
+  if (!target || !areaCounts) return;
+  target.replaceChildren();
+  const table = element('table', undefined, 'sp-table');
+  const thead = element('thead');
+  const hrow = element('tr');
+  hrow.append(element('th', 'Section / Material area'), element('th', 'Max units'));
+  thead.append(hrow);
+  const tbody = element('tbody');
+  const labels = {
+    identity: 'Case & learner identity',
+    runtime: 'Simulation runtime rules',
+    roles: 'Learner audience & roles',
+    context: 'Course / assignment context',
+    'learner-has-info': 'Information learner already has',
+    'consultants-have-info': 'Consultant information',
+    'facilitator-observation-reference': 'Facilitator reference',
+    'patient-parameters-and-disclosable-info': 'Patient parameters & disclosable info',
+    feedback: 'Feedback criteria & rubric',
+  };
+  for (const [key, label] of Object.entries(labels)) {
+    const val = areaCounts[key] || 0;
+    if (val > 0) {
+      const row = element('tr');
+      row.append(element('td', label), element('td', val.toLocaleString()));
+      tbody.append(row);
+    }
+  }
+  table.append(thead, tbody);
+  const details = element('details');
+  const summary = element('summary', 'View unit breakdown by section');
+  details.append(summary, table);
+  target.append(details);
+  target.hidden = false;
+}
+
 function buildPackage() {
   invalidate(); const currentRevision = revision, result = compileEncounter(model(), APP_CONTENT);
   if (result.errors.length) {
     const box = byId('build-errors'); box.replaceChildren(element('h3', 'Please resolve these build issues'));
-    const list = element('ul'); result.errors.forEach(error => list.append(element('li', error))); box.append(list); box.hidden = false;
+    const list = element('ul'); result.errors.forEach(error => list.append(element('li', error))); box.append(list);
+    if (result.areaCounts) {
+      const breakdown = element('div', undefined, 'sp-context');
+      renderAreaBreakdown(breakdown, result.areaCounts);
+      box.append(breakdown);
+    }
+    box.hidden = false;
     box.setAttribute('tabindex', '-1'); box.focus(); return;
   }
   try {
@@ -285,9 +327,11 @@ function buildPackage() {
     if (badge && result.instructionCounts) {
       const count = result.instructionCounts.maximum;
       badge.textContent = `${count.toLocaleString()} / 48,000 units`;
-      badge.style.backgroundColor = count < 48000 ? '#e6f4ea' : '#fce8e6';
-      badge.style.color = count < 48000 ? '#137333' : '#ba0c2f';
+      badge.style.backgroundColor = count < 45000 ? '#e6f4ea' : count < 48000 ? '#fef7e0' : '#fce8e6';
+      badge.style.color = count < 45000 ? '#137333' : count < 48000 ? '#b06000' : '#ba0c2f';
     }
+
+    renderAreaBreakdown(byId('instruction-breakdown'), result.areaCounts);
 
     byId('build-result').hidden = false;
     if (byId('copy-instructions')) byId('copy-instructions').hidden = false;

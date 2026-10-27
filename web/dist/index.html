@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-p9iwFGVa/Iw5VLWE/vCVedvmsOSGn6a2PLU3rEuPQHs='; style-src 'unsafe-inline'; font-src data:; img-src data: blob:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-4uIT1DEWQoKoSG8VD0iwY+KEhSMdCgDNoiItpGDV0R8='; style-src 'unsafe-inline'; font-src data:; img-src data: blob:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="description" content="Package faculty-prepared materials for a simulated patient encounter. Files are processed locally in your browser.">
 <title>Simulated Patient Builder</title>
 <style>/*!
@@ -704,6 +704,7 @@ BuckeyeSerif2: 400, 600, 700, 900
     <h3 id="result-heading" style="margin: 0;">Instructions ready</h3>
     <span id="instruction-count-badge" class="sp-badge">0 / 48,000 units</span>
   </div>
+  <div id="instruction-breakdown" class="sp-context" hidden></div>
   <div id="build-warnings"></div>
   <details open>
     <summary>Inspect compiled instructions</summary>
@@ -950,10 +951,27 @@ END INLINE CASE
 
   const instructionCounts = textCounts(directInstructions);
   const targetLimit = 48000;
+  const warningLimit = 45000;
+
+  const areaCounts = {
+    identity: textCounts(identity).maximum,
+    runtime: textCounts(renderedRuntime).maximum,
+    roles: rolesSection ? textCounts(rolesSection.trim()).maximum : 0,
+    context: textCounts(sourceBlock('context', model.groups.context, options)).maximum,
+    'learner-has-info': textCounts(sourceBlock('learner-has-info', model.groups['learner-has-info'], options)).maximum,
+    'consultants-have-info': textCounts(sourceBlock('consultants-have-info', model.groups['consultants-have-info'], options)).maximum,
+    'facilitator-observation-reference': textCounts(sourceBlock('facilitator-observation-reference', model.groups['facilitator-observation-reference'], options)).maximum,
+    'patient-parameters-and-disclosable-info': textCounts(sourceBlock('patient-parameters-and-disclosable-info', model.groups['patient-parameters-and-disclosable-info'], options)).maximum,
+    feedback: textCounts(feedbackText).maximum,
+  };
 
   if (instructionCounts.maximum >= targetLimit) {
     errors.push(`Compiled instructions (${instructionCounts.maximum.toLocaleString()} maximum units) exceed the under-48,000 unit budget for Carmen AI Assistant. Trim duplicate attachments or lengthy grading excerpts; no content was removed automatically.`);
-    return { errors, warnings, files: [], instructionCounts };
+    return { errors, warnings, files: [], instructionCounts, areaCounts };
+  }
+
+  if (instructionCounts.maximum >= warningLimit) {
+    warnings.push('Instructions are within 3,000 units of the limit. Consider trimming duplicate or grader-only material.');
   }
 
   const manifest = { schema_version: 1, builder_version: content.version, case_name: name, learner_role: role, participating_roles: activeRoles.map(r => ({ id: r.id, title: r.title.trim(), isCustom: Boolean(r.isCustom) })), export_format: 'carmen', unlisted_symptoms: model.unlistedSymptoms === 'deny' ? 'deny' : 'neutral', feedback: { preset: feedback.usePreset ? model.preset : null, preset_version: feedback.usePreset ? model.presetSnapshot?.version || content.version : null, custom: feedback.custom, composition: feedback.custom ? feedback.usePreset ? 'supplement' : 'custom-only' : null }, counts: instructionCounts, sources: Object.fromEntries(Object.entries(model.groups).map(([key, group]) => [key, includedSources(group).map(s => s.label)])), assets: assetFiles.map(a => a.path) };
@@ -962,7 +980,7 @@ END INLINE CASE
     { name: `${slug}-carmen-instructions.md`, data: directInstructions, type: 'text/markdown;charset=utf-8' }
   ];
 
-  return { errors, warnings, files, directInstructions, instructionCounts, manifest, caseText, feedbackText, feedbackLabel: feedback.label };
+  return { errors, warnings, files, directInstructions, instructionCounts, areaCounts, manifest, caseText, feedbackText, feedbackLabel: feedback.label };
 }
 
 // Extract supplied descriptions only. No pixel interpretation or network requests.
@@ -1732,11 +1750,53 @@ for (const target of document.querySelectorAll('[data-input-group]')) {
   const list = element('ul', undefined, 'sp-files'); list.setAttribute('aria-label', `${AREA_LABELS[key]} attached files`); list.setAttribute('aria-live', 'polite');
   target.append(label, fileLabel, note, list); groupElements.set(key, { text, file, list });
 }
+function renderAreaBreakdown(target, areaCounts) {
+  if (!target || !areaCounts) return;
+  target.replaceChildren();
+  const table = element('table', undefined, 'sp-table');
+  const thead = element('thead');
+  const hrow = element('tr');
+  hrow.append(element('th', 'Section / Material area'), element('th', 'Max units'));
+  thead.append(hrow);
+  const tbody = element('tbody');
+  const labels = {
+    identity: 'Case & learner identity',
+    runtime: 'Simulation runtime rules',
+    roles: 'Learner audience & roles',
+    context: 'Course / assignment context',
+    'learner-has-info': 'Information learner already has',
+    'consultants-have-info': 'Consultant information',
+    'facilitator-observation-reference': 'Facilitator reference',
+    'patient-parameters-and-disclosable-info': 'Patient parameters & disclosable info',
+    feedback: 'Feedback criteria & rubric',
+  };
+  for (const [key, label] of Object.entries(labels)) {
+    const val = areaCounts[key] || 0;
+    if (val > 0) {
+      const row = element('tr');
+      row.append(element('td', label), element('td', val.toLocaleString()));
+      tbody.append(row);
+    }
+  }
+  table.append(thead, tbody);
+  const details = element('details');
+  const summary = element('summary', 'View unit breakdown by section');
+  details.append(summary, table);
+  target.append(details);
+  target.hidden = false;
+}
+
 function buildPackage() {
   invalidate(); const currentRevision = revision, result = compileEncounter(model(), APP_CONTENT);
   if (result.errors.length) {
     const box = byId('build-errors'); box.replaceChildren(element('h3', 'Please resolve these build issues'));
-    const list = element('ul'); result.errors.forEach(error => list.append(element('li', error))); box.append(list); box.hidden = false;
+    const list = element('ul'); result.errors.forEach(error => list.append(element('li', error))); box.append(list);
+    if (result.areaCounts) {
+      const breakdown = element('div', undefined, 'sp-context');
+      renderAreaBreakdown(breakdown, result.areaCounts);
+      box.append(breakdown);
+    }
+    box.hidden = false;
     box.setAttribute('tabindex', '-1'); box.focus(); return;
   }
   try {
@@ -1750,9 +1810,11 @@ function buildPackage() {
     if (badge && result.instructionCounts) {
       const count = result.instructionCounts.maximum;
       badge.textContent = `${count.toLocaleString()} / 48,000 units`;
-      badge.style.backgroundColor = count < 48000 ? '#e6f4ea' : '#fce8e6';
-      badge.style.color = count < 48000 ? '#137333' : '#ba0c2f';
+      badge.style.backgroundColor = count < 45000 ? '#e6f4ea' : count < 48000 ? '#fef7e0' : '#fce8e6';
+      badge.style.color = count < 45000 ? '#137333' : count < 48000 ? '#b06000' : '#ba0c2f';
     }
+
+    renderAreaBreakdown(byId('instruction-breakdown'), result.areaCounts);
 
     byId('build-result').hidden = false;
     if (byId('copy-instructions')) byId('copy-instructions').hidden = false;

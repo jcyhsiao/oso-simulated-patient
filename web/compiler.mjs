@@ -160,10 +160,27 @@ END INLINE CASE
 
   const instructionCounts = textCounts(directInstructions);
   const targetLimit = 48000;
+  const warningLimit = 45000;
+
+  const areaCounts = {
+    identity: textCounts(identity).maximum,
+    runtime: textCounts(renderedRuntime).maximum,
+    roles: rolesSection ? textCounts(rolesSection.trim()).maximum : 0,
+    context: textCounts(sourceBlock('context', model.groups.context, options)).maximum,
+    'learner-has-info': textCounts(sourceBlock('learner-has-info', model.groups['learner-has-info'], options)).maximum,
+    'consultants-have-info': textCounts(sourceBlock('consultants-have-info', model.groups['consultants-have-info'], options)).maximum,
+    'facilitator-observation-reference': textCounts(sourceBlock('facilitator-observation-reference', model.groups['facilitator-observation-reference'], options)).maximum,
+    'patient-parameters-and-disclosable-info': textCounts(sourceBlock('patient-parameters-and-disclosable-info', model.groups['patient-parameters-and-disclosable-info'], options)).maximum,
+    feedback: textCounts(feedbackText).maximum,
+  };
 
   if (instructionCounts.maximum >= targetLimit) {
     errors.push(`Compiled instructions (${instructionCounts.maximum.toLocaleString()} maximum units) exceed the under-48,000 unit budget for Carmen AI Assistant. Trim duplicate attachments or lengthy grading excerpts; no content was removed automatically.`);
-    return { errors, warnings, files: [], instructionCounts };
+    return { errors, warnings, files: [], instructionCounts, areaCounts };
+  }
+
+  if (instructionCounts.maximum >= warningLimit) {
+    warnings.push('Instructions are within 3,000 units of the limit. Consider trimming duplicate or grader-only material.');
   }
 
   const manifest = { schema_version: 1, builder_version: content.version, case_name: name, learner_role: role, participating_roles: activeRoles.map(r => ({ id: r.id, title: r.title.trim(), isCustom: Boolean(r.isCustom) })), export_format: 'carmen', unlisted_symptoms: model.unlistedSymptoms === 'deny' ? 'deny' : 'neutral', feedback: { preset: feedback.usePreset ? model.preset : null, preset_version: feedback.usePreset ? model.presetSnapshot?.version || content.version : null, custom: feedback.custom, composition: feedback.custom ? feedback.usePreset ? 'supplement' : 'custom-only' : null }, counts: instructionCounts, sources: Object.fromEntries(Object.entries(model.groups).map(([key, group]) => [key, includedSources(group).map(s => s.label)])), assets: assetFiles.map(a => a.path) };
@@ -172,5 +189,5 @@ END INLINE CASE
     { name: `${slug}-carmen-instructions.md`, data: directInstructions, type: 'text/markdown;charset=utf-8' }
   ];
 
-  return { errors, warnings, files, directInstructions, instructionCounts, manifest, caseText, feedbackText, feedbackLabel: feedback.label };
+  return { errors, warnings, files, directInstructions, instructionCounts, areaCounts, manifest, caseText, feedbackText, feedbackLabel: feedback.label };
 }
