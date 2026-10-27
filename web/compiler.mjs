@@ -78,40 +78,6 @@ export function feedbackChoice(model, content) {
   return { custom, usePreset, enabled: usePreset || custom,
     label: usePreset ? `${selectedCasePreset(model, content).title}${custom ? ' + faculty criteria' : ''}` : custom ? 'Faculty-provided criteria only' : 'No preliminary feedback' };
 }
-export function pruneProfessionalScope(text) {
-  if (!text) return '';
-  const sections = [];
-  const lines = text.split('\n');
-  let currentSection = null;
-  let keep = false;
-  const allowedHeadings = [
-    'role and scope',
-    'priorities',
-    'visible judgment process',
-    'focused information needs',
-    'contribution',
-    'boundaries',
-    'referral and continued responsibility'
-  ];
-
-  for (const line of lines) {
-    const headingMatch = line.match(/^##\s+(.+)$/);
-    if (headingMatch) {
-      const heading = headingMatch[1].split('—')[0].trim().toLowerCase();
-      keep = allowedHeadings.some(h => heading.startsWith(h));
-      if (keep) {
-        currentSection = [line];
-        sections.push(currentSection);
-      } else {
-        currentSection = null;
-      }
-    } else if (keep && currentSection) {
-      currentSection.push(line);
-    }
-  }
-
-  if (!sections.length) return text.trim();
-  return sections.map(s => s.join('\n').trim()).join('\n\n');
 }
 
 export function compileEncounter(model, content) {
@@ -146,20 +112,24 @@ export function compileEncounter(model, content) {
   else {
     feedbackText += 'Activate only after explicit encounter closure. Mark output as preliminary AI-generated feedback for faculty review.\n\n';
     if (activeRoles.length) {
-      feedbackText += '## Participating learner professional roles and scope boundaries\n\n';
-      feedbackText += 'Note: Preset profiles are AI-generated starter drafts for faculty review and customization; they are not validated clinical practice standards.\n';
-      feedbackText += 'Evaluate learner actions according to their stated professional role and scope boundaries. Do not penalize one profession for omitting procedures or prescribing that lie within another profession’s scope.\n\n';
-      for (const r of activeRoles) {
-        const pruned = pruneProfessionalScope(r.text);
-        feedbackText += `### Professional Scope: ${r.title.trim()}\n\n${pruned}\n\n`;
-      }
+      feedbackText += 'Evaluate each learner according to the learner audience and professional scope section above; do not penalize one profession for omitting actions within another profession\'s scope.\n\n';
     }
     if (feedback.usePreset) feedbackText += selectedCasePreset(model, content).text + '\n\n';
     if (feedback.custom) feedbackText += `### ${feedback.usePreset ? 'Supplemental case-specific criteria' : 'Faculty-defined feedback criteria (no built-in preset included)'}\n\n` + sourceBlock('feedback', model.groups.feedback, options) + '\n';
     feedbackText += 'Use the supplied learner role to select relevant profession-labeled expectations; do not judge an individual against every profession. Supplemental targets without explicit compatible rating instructions receive narrative observations, not invented numeric anchors. Flag conflicting criteria and withhold affected judgments; do not silently reconcile scales, weights or passing rules. No feedback target becomes patient knowledge or an interview hint.\n';
   }
 
-  const identity = `Case: ${name}\nLearner role: ${role}${activeRoles.length > 1 ? `\nParticipating professions: ${roleListing}` : ''}\n${model.description?.trim() ? '\nCase description:\n' + model.description.trim() + '\n' : ''}`;
+  const identity = `Case: ${name}\nLearner role: ${role}${activeRoles.length ? `\nSelected professional roles: ${roleListing}` : ''}\n${model.description?.trim() ? '\nCase description:\n' + model.description.trim() + '\n' : ''}`;
+
+  let rolesSection = '';
+  if (activeRoles.length) {
+    rolesSection = '# Learner audience and professional scope\n\n' +
+      'Context for who is interviewing the patient and for role-appropriate feedback. This is NOT patient knowledge, does NOT create simulated consultants, and does NOT add assessment targets beyond the selected feedback criteria. Profiles are AI-generated starter drafts for faculty review unless edited by faculty.\n\n';
+    for (const r of activeRoles) {
+      const cleaned = compactSourceText(r.text || '').replace(/^#\s*PROFESSIONAL:\s*[^\n]*\n+/i, '').trim();
+      rolesSection += `### ${r.title.trim()}\n\n${cleaned}\n\n`;
+    }
+  }
 
   if (!content.runtime.includes('[[UNLISTED_DETAIL_POLICY]]')) {
     throw new Error('Runtime is missing the unlisted-detail policy marker.');
@@ -176,7 +146,7 @@ export function compileEncounter(model, content) {
 ${identity}
 
 ${renderedRuntime}
-
+${rolesSection ? '\n' + rolesSection.trim() + '\n' : ''}
 REQUIRED CONTEXT: Read the complete inline case and selected feedback below before the first response. All required text is embedded; no external retrieval or upload is required. If required context is lost, stop and ask the instructor to restore setup.
 
 BEGIN INLINE CASE — CONCEALED EXCEPT AS RELEASE RULES PERMIT
