@@ -25,17 +25,6 @@ function defaultRoles() {
   }));
 }
 
-function syncLearnerRole() {
-  const active = roles.filter(r => r.active);
-  if (!active.length) return;
-  const roleInput = byId('learner-role');
-  if (active.length === 1) {
-    roleInput.value = `${active[0].title} student`;
-  } else {
-    roleInput.value = `Interprofessional student team (${active.map(r => r.title).join(', ')})`;
-  }
-}
-
 function renderRoles() {
   const selectedContainer = byId('selected-roles-container');
   const availableContainer = byId('available-roles-container');
@@ -67,7 +56,6 @@ function renderRoles() {
         e.stopPropagation();
         role.active = false;
         renderRoles();
-        syncLearnerRole();
         update();
       });
       chip.append(label, removeBtn);
@@ -113,7 +101,6 @@ function renderRoles() {
     chip.addEventListener('click', () => {
       role.active = true;
       renderRoles();
-      syncLearnerRole();
       update();
     });
     availableContainer.append(chip);
@@ -365,7 +352,6 @@ byId('save-custom-role-btn')?.addEventListener('click', () => {
   byId('custom-role-text').value = '';
   byId('custom-role-form').hidden = true;
   renderRoles();
-  syncLearnerRole();
   update();
 });
 roles = defaultRoles();
