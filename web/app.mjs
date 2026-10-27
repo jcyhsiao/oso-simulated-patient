@@ -123,6 +123,8 @@ function renderRoles() {
 const revoked = () => { for (const url of urls) URL.revokeObjectURL(url); urls = []; };
 function invalidate() {
   revision++; revoked(); byId('build-result').hidden = true; byId('build-errors').hidden = true;
+  if (byId('copy-instructions')) byId('copy-instructions').hidden = true;
+  if (byId('download-instructions')) byId('download-instructions').hidden = true;
   if (byId('copy-synthesis')) byId('copy-synthesis').hidden = true;
   if (byId('download-synthesis')) byId('download-synthesis').hidden = true;
   byId('build-status').textContent = '';
@@ -132,7 +134,7 @@ function model() {
   return { name: byId('case-name').value, role: byId('learner-role').value, description: byId('case-description').value,
     groups, preset: byId('feedback-preset').value, presetSnapshot,
     composition: document.querySelector('input[name=composition]:checked')?.value || '',
-    format: 'synthesis',
+    format: 'canvas-direct',
     roles: roles.map(r => ({ ...r })) };
 }
 function selectionLabel(current) {
@@ -290,12 +292,25 @@ function buildPackage() {
     if (revision !== currentRevision) return;
     const warnings = byId('build-warnings'); warnings.replaceChildren();
     if (result.warnings.length) { warnings.append(element('h3', 'Build notes')); const list = element('ul'); result.warnings.forEach(note => list.append(element('li', note))); warnings.append(list); }
-    byId('generated-preview').textContent = result.synthesisPrompt;
+
+    byId('generated-preview').textContent = result.directInstructions;
+    if (byId('synthesis-preview')) byId('synthesis-preview').textContent = result.synthesisPrompt;
+
+    const badge = byId('instruction-count-badge');
+    if (badge && result.instructionCounts) {
+      const count = result.instructionCounts.maximum;
+      badge.textContent = `${count.toLocaleString()} / 48,000 units`;
+      badge.style.backgroundColor = count <= 48000 ? '#e6f4ea' : count <= 50000 ? '#fef7e0' : '#fce8e6';
+      badge.style.color = count <= 48000 ? '#137333' : count <= 50000 ? '#b06000' : '#ba0c2f';
+    }
+
     byId('build-result').hidden = false;
+    if (byId('copy-instructions')) byId('copy-instructions').hidden = false;
+    if (byId('download-instructions')) byId('download-instructions').hidden = false;
     if (byId('copy-synthesis')) byId('copy-synthesis').hidden = false;
     if (byId('download-synthesis')) byId('download-synthesis').hidden = false;
-    byId('build-status').textContent = 'Synthesis prompt ready! Click "Copy prompt to clipboard" below.';
-  } catch (error) { byId('build-errors').textContent = `Could not generate prompt: ${error.message}`; byId('build-errors').hidden = false; revoked(); }
+    byId('build-status').textContent = 'Instructions compiled! Click "Copy instructions to clipboard" below, then paste directly into Canvas AI Assistant.';
+  } catch (error) { byId('build-errors').textContent = `Could not compile instructions: ${error.message}`; byId('build-errors').hidden = false; revoked(); }
 }
 for (const button of document.querySelectorAll('[data-step]')) button.addEventListener('click', () => showStep(Number(button.dataset.step), true));
 for (const button of document.querySelectorAll('[data-area]')) button.addEventListener('click', () => showArea(button.dataset.area));
@@ -305,17 +320,38 @@ function chooseCurrentPreset() { const key = byId('feedback-preset').value; pres
 byId('feedback-preset').addEventListener('change', chooseCurrentPreset);
 byId('update-preset').addEventListener('click', chooseCurrentPreset); document.querySelectorAll('input[name=composition]').forEach(input => input.addEventListener('change', update));
 byId('build').addEventListener('click', buildPackage);
-byId('copy-synthesis')?.addEventListener('click', async () => {
+byId('copy-instructions')?.addEventListener('click', async () => {
   const text = byId('generated-preview').textContent;
   try {
     await navigator.clipboard.writeText(text);
-    byId('build-status').textContent = 'Copied prompt to clipboard! Paste into OSU Gemini or Microsoft Copilot.';
+    byId('build-status').textContent = 'Copied instructions to clipboard! Paste directly into Canvas AI Assistant.';
+  } catch {
+    byId('build-status').textContent = 'Clipboard access denied. Select all text in the preview below and copy manually.';
+  }
+});
+byId('download-instructions')?.addEventListener('click', () => {
+  const text = byId('generated-preview').textContent;
+  const name = byId('case-name').value.trim() || 'simulated-patient';
+  const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  urls.push(url);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${slugify(name)}-canvas-instructions.md`;
+  a.click();
+  byId('build-status').textContent = 'Download started.';
+});
+byId('copy-synthesis')?.addEventListener('click', async () => {
+  const text = byId('synthesis-preview') ? byId('synthesis-preview').textContent : byId('generated-preview').textContent;
+  try {
+    await navigator.clipboard.writeText(text);
+    byId('build-status').textContent = 'Copied synthesis prompt to clipboard! Paste into OSU Gemini or Microsoft Copilot.';
   } catch {
     byId('build-status').textContent = 'Clipboard access denied. Select all text in the preview below and copy manually.';
   }
 });
 byId('download-synthesis')?.addEventListener('click', () => {
-  const text = byId('generated-preview').textContent;
+  const text = byId('synthesis-preview') ? byId('synthesis-preview').textContent : byId('generated-preview').textContent;
   const name = byId('case-name').value.trim() || 'simulated-patient';
   const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
   const url = URL.createObjectURL(blob);

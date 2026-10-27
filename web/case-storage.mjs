@@ -23,8 +23,8 @@ function caseImage(image) {
     excluded: Boolean(image.excluded), reviewOpen: Boolean(image.reviewOpen), warning: caseString(image.warning || '') };
 }
 export function cleanCaseModel(model) {
-  const format = model?.format || 'synthesis';
-  if (!model || !['none', 'fnp', 'ipe'].includes(model.preset) || !['synthesis', 'single', 'skills'].includes(format) || !['', 'supplement', 'replace'].includes(model.composition)) throw new Error('Invalid case settings.');
+  const format = model?.format || 'canvas-direct';
+  if (!model || !['none', 'fnp', 'ipe'].includes(model.preset) || !['canvas-direct', 'synthesis', 'single', 'skills'].includes(format) || !['', 'supplement', 'replace'].includes(model.composition)) throw new Error('Invalid case settings.');
   const groups = Object.fromEntries(CASE_GROUP_KEYS.map(key => {
     const group = model.groups?.[key];
     if (!group || !Array.isArray(group.files)) throw new Error('Missing case input group.');

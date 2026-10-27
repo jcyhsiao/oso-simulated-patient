@@ -61,30 +61,37 @@
 <section data-panel="2" aria-labelledby="feedback-heading" hidden><h2 id="feedback-heading">Choose preliminary feedback</h2><p>Combine a framework with case-specific expectations for the stated learner role.</p><div class="sp-card"><label class="sp-field">Built-in preset<select id="feedback-preset"><option value="none">No built-in preset</option><option value="fnp">FNP OSCE</option><option value="ipe">Buckeye IPE</option></select></label><div id="preset-description" class="sp-context"></div><button type="button" id="update-preset" class="sp-button" hidden>Update to current preset</button><details><summary>Inspect the included preset</summary><pre id="preset-preview" class="sp-preview"></pre></details><h3>Case-specific expectations or custom feedback criteria <span class="sp-optional">optional</span></h3><p class="sp-help">Paste the relevant profession-specific learner expectations here. You may provide multiple clearly labeled professions. Your text is included without automatic classification or summarization. Prefer concise learning targets to an unnecessary full prescribing or grading key.</p><div data-input-group="feedback"></div>
 <fieldset id="feedback-composition" hidden><legend>How should your criteria be used?</legend><label class="sp-choice"><input type="radio" name="composition" value="supplement"><span><strong>Supplement the preset</strong><span>Keep the framework and add separately labeled case-specific expectations.</span></span></label><label class="sp-choice"><input type="radio" name="composition" value="replace"><span><strong>Replace the preset</strong><span>Use only the criteria you supplied.</span></span></label></fieldset><p class="sp-help">Additional targets without supplied rating anchors receive narrative feedback. Conflicting criteria are flagged by the host rather than silently combined.</p><div class="sp-context"><span class="sp-help">Included feedback</span><p id="feedback-included"></p></div></div></section>
 <section data-panel="3" aria-labelledby="export-heading" hidden>
-<h2 id="export-heading">Generate instructions for Canvas AI Assistant</h2>
+<h2 id="export-heading">Instructions for Canvas AI Assistant</h2>
 <div class="sp-card">
-  <h3>How this workflow works</h3>
+  <h3>Compile patient encounter instructions</h3>
   <div class="sp-context">
-    <ol style="margin: 8px 0 8px 20px; padding: 0; line-height: 1.6;">
-      <li>Click <strong>Generate synthesis prompt</strong> below, then click <strong>Copy prompt to clipboard</strong>.</li>
-      <li>Paste the prompt into <strong>OSU Gemini</strong> or <strong>Microsoft Copilot</strong>.</li>
-      <li>In Gemini or Copilot, click the <strong>Copy code</strong> button on the generated markdown box (chat interfaces cannot reliably trigger direct file downloads), then paste the text into your <strong>Canvas AI Assistant</strong> instructions.</li>
-    </ol>
+    <p>This compiles your prepared case materials, clinical records, and feedback rubric directly into production-ready system instructions for <strong>Canvas AI Assistant</strong> in your browser—no external AI or middleman required.</p>
   </div>
   <div class="sp-case-buttons">
-    <button type="button" id="build" class="sp-button sp-primary">Generate synthesis prompt</button>
-    <button type="button" id="copy-synthesis" class="sp-button" hidden>Copy prompt to clipboard</button>
-    <button type="button" id="download-synthesis" class="sp-button" hidden>Download prompt (.md)</button>
+    <button type="button" id="build" class="sp-button sp-primary">Compile instructions</button>
+    <button type="button" id="copy-instructions" class="sp-button" hidden>Copy instructions to clipboard</button>
+    <button type="button" id="download-instructions" class="sp-button" hidden>Download instructions (.md)</button>
   </div>
   <p id="build-status" class="sp-help" role="status"></p>
 </div>
 <div id="build-errors" class="sp-card sp-error" role="alert" hidden></div>
 <section id="build-result" class="sp-card" hidden aria-labelledby="result-heading">
-  <h3 id="result-heading">Synthesis prompt ready</h3>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+    <h3 id="result-heading" style="margin: 0;">Instructions ready</h3>
+    <span id="instruction-count-badge" class="sp-badge">0 / 48,000 units</span>
+  </div>
   <div id="build-warnings"></div>
   <details open>
-    <summary>Inspect synthesis prompt</summary>
+    <summary>Inspect compiled instructions</summary>
     <pre id="generated-preview" class="sp-preview"></pre>
+  </details>
+  <details id="synthesis-fallback-details" style="margin-top: 16px;">
+    <summary>Alternative: Copy Gemini/Copilot synthesis prompt (for unusually large cases)</summary>
+    <div class="sp-case-buttons" style="margin-top: 8px;">
+      <button type="button" id="copy-synthesis" class="sp-button">Copy synthesis prompt</button>
+      <button type="button" id="download-synthesis" class="sp-button">Download synthesis prompt (.md)</button>
+    </div>
+    <pre id="synthesis-preview" class="sp-preview" style="margin-top: 8px;"></pre>
   </details>
 </section>
 </section>

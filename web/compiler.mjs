@@ -45,7 +45,10 @@ export function includedSources(group = {}, options = {}) {
 function sourceBlock(key, group, options = {}) {
   const sources = includedSources(group, { ...options, key });
   if (!sources.length) return `## ${AREA_LABELS[key]}\n\nNo material supplied.\n`;
-  return `## ${AREA_LABELS[key]}\n\n` + sources.map((source, index) => `### Source ${index + 1}: ${source.label.replace(/[\r\n]/g, ' ')}\n\n${source.text}\n`).join('\n');
+  return `## ${AREA_LABELS[key]}\n\n` + sources.map((source, index) => {
+    const cleanedText = (source.text || '').replace(/\r\n?/g, '\n').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+    return `### Source ${index + 1}: ${source.label.replace(/[\r\n]/g, ' ')}\n\n${cleanedText}\n`;
+  }).join('\n');
 }
 function selectedCasePreset(model, content) {
   if (model.presetSnapshot?.key === model.preset && typeof model.presetSnapshot.text === 'string' && typeof model.presetSnapshot.title === 'string') return model.presetSnapshot;
@@ -141,6 +144,35 @@ export function compileEncounter(model, content) {
     feedbackText += 'Use the supplied learner role to select relevant profession-labeled expectations; do not judge an individual against every profession. Supplemental targets without explicit compatible rating instructions receive narrative observations, not invented numeric anchors. Flag conflicting criteria and withhold affected judgments; do not silently reconcile scales, weights or passing rules. No feedback target becomes patient knowledge or an interview hint.\n';
   }
 
+  const identity = `Case: ${name}\nLearner role: ${role}${activeRoles.length > 1 ? `\nParticipating professions: ${roleListing}` : ''}\n${model.description?.trim() ? '\nCase description:\n' + model.description.trim() + '\n' : ''}`;
+
+  const directInstructions = `# ${name} — Simulated Patient Instructions
+
+${identity}
+
+${content.runtime}
+
+REQUIRED CONTEXT: Read the complete inline case and selected feedback below before the first response. All required text is embedded; no external retrieval or upload is required. If required context is lost, stop and ask the instructor to restore setup.
+
+BEGIN INLINE CASE — CONCEALED EXCEPT AS RELEASE RULES PERMIT
+
+${caseText}
+
+${feedbackText}
+
+END INLINE CASE
+`;
+
+  const instructionCounts = textCounts(directInstructions);
+  const targetLimit = 48000;
+  const safetyLimit = 50000;
+
+  if (instructionCounts.maximum > safetyLimit) {
+    errors.push(`Compiled instructions (${instructionCounts.maximum.toLocaleString()} units) exceed the safety limit of ${safetyLimit.toLocaleString()} units. Remove redundant attachments or use the synthesis prompt fallback.`);
+  } else if (instructionCounts.maximum > targetLimit) {
+    warnings.push(`Compiled instructions (${instructionCounts.maximum.toLocaleString()} units) exceed the recommended ${targetLimit.toLocaleString()} unit limit for Canvas AI Assistant.`);
+  }
+
   const synthesisPrompt = `# TASK: Generate Instructions for Canvas AI Assistant (Simulated Patient)
 
 You are an expert instructional designer in health sciences simulation. Below is prepared, reviewed clinical and educational material for an encounter with **${name}**.
@@ -198,11 +230,12 @@ ${caseText}
 ${feedbackText}
 `;
 
-  const manifest = { schema_version: 1, builder_version: content.version, case_name: name, learner_role: role, participating_roles: activeRoles.map(r => ({ id: r.id, title: r.title.trim(), isCustom: Boolean(r.isCustom) })), export_format: 'synthesis', feedback: { preset: feedback.usePreset ? model.preset : null, preset_version: feedback.usePreset ? model.presetSnapshot?.version || content.version : null, custom: feedback.custom, composition: feedback.custom ? feedback.usePreset ? 'supplement' : 'custom-only' : null }, sources: Object.fromEntries(Object.entries(model.groups).map(([key, group]) => [key, includedSources(group).map(s => s.label)])), assets: assetFiles.map(a => a.path) };
+  const manifest = { schema_version: 1, builder_version: content.version, case_name: name, learner_role: role, participating_roles: activeRoles.map(r => ({ id: r.id, title: r.title.trim(), isCustom: Boolean(r.isCustom) })), export_format: 'canvas-direct', feedback: { preset: feedback.usePreset ? model.preset : null, preset_version: feedback.usePreset ? model.presetSnapshot?.version || content.version : null, custom: feedback.custom, composition: feedback.custom ? feedback.usePreset ? 'supplement' : 'custom-only' : null }, sources: Object.fromEntries(Object.entries(model.groups).map(([key, group]) => [key, includedSources(group).map(s => s.label)])), assets: assetFiles.map(a => a.path) };
 
   const files = [
+    { name: `${slug}-canvas-instructions.md`, data: directInstructions, type: 'text/markdown;charset=utf-8' },
     { name: `${slug}-synthesis-prompt.md`, data: synthesisPrompt, type: 'text/markdown;charset=utf-8' }
   ];
 
-  return { errors, warnings, files, synthesisPrompt, manifest, caseText, feedbackText, feedbackLabel: feedback.label };
+  return { errors, warnings, files, directInstructions, synthesisPrompt, instructionCounts, manifest, caseText, feedbackText, feedbackLabel: feedback.label };
 }

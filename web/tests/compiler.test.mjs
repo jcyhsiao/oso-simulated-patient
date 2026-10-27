@@ -27,18 +27,19 @@ function fixture() {
   };
 }
 
-test('synthesis export retains provided role-scoped material and instructions for Canvas AI Assistant', () => {
+test('canvas direct export produces ready-to-paste instructions and optional synthesis prompt', () => {
   const model = fixture();
   model.groups.context.text = 'Course example: a different patient.';
   model.groups['learner-has-info'].text = 'Learner already knows the color.';
   const result = compileEncounter(model, content);
   assert.deepEqual(result.errors, []);
-  assert.equal(result.files.length, 1);
-  const text = result.files[0].data;
-  assert.match(text, /Course example: a different patient/);
-  assert.match(text, /No preliminary feedback is selected/);
-  assert.match(text, /TASK: Generate Instructions for Canvas AI Assistant/);
-  assert.match(text, /Course or assignment context/);
+  assert.equal(result.files.length, 2);
+  assert.equal(result.files[0].name, 'example-person-canvas-instructions.md');
+  assert.equal(result.files[1].name, 'example-person-synthesis-prompt.md');
+  assert.ok(result.instructionCounts.maximum < 48000);
+  assert.match(result.directInstructions, /# Example person — Simulated Patient Instructions/);
+  assert.match(result.directInstructions, /STRICT CLOSED-WORLD CONSTRAINT/);
+  assert.match(result.synthesisPrompt, /TASK: Generate Instructions for Canvas AI Assistant/);
 });
 
 test('preset/custom feedback combinations preserve independent criteria', () => {
@@ -187,7 +188,7 @@ test('synthesis prompt contains strict guardrails, three-tier architecture, and 
   model.composition = 'supplement';
   const result = compileEncounter(model, content);
   assert.deepEqual(result.errors, []);
-  const prompt = result.files[0].data;
+  const prompt = result.synthesisPrompt;
   assert.match(prompt, /TASK: Generate Instructions for Canvas AI Assistant/);
   assert.match(prompt, /Preserve Clinical Ground Truth/);
   assert.match(prompt, /Demeanor & Emotional Presentation/);
@@ -210,7 +211,7 @@ test('selected and custom professional roles synthesize into feedback with prove
   assert.match(result.feedbackText, /AI-generated starter drafts for faculty review and customization/);
   assert.match(result.feedbackText, /DH SCOPE: oral health prevention/);
   assert.match(result.feedbackText, /FNP SCOPE: advanced primary care/);
-  assert.match(result.files[0].data, /Participating Professions:.*Dental Hygiene/);
+  assert.match(result.files[0].data, /Participating professions:.*Dental Hygiene/i);
   assert.equal(result.manifest.participating_roles.length, 2);
   assert.equal(result.manifest.participating_roles[0].title, 'Dental Hygiene');
   assert.equal(result.manifest.participating_roles[1].isCustom, true);
