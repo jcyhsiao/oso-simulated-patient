@@ -3,6 +3,16 @@ import { createZip, readZip } from './zip.mjs';
 export const CASE_GROUP_KEYS = ['context', ...AREA_KEYS, 'feedback'];
 export function newCaseId() { return crypto.randomUUID(); }
 function caseString(value) { if (typeof value !== 'string') throw new Error('Invalid case text field.'); return value; }
+function caseRole(role) {
+  if (!role || typeof role !== 'object') throw new Error('Invalid professional role.');
+  return {
+    id: caseString(role.id),
+    title: caseString(role.title),
+    text: caseString(role.text || ''),
+    isCustom: Boolean(role.isCustom),
+    active: Boolean(role.active)
+  };
+}
 function caseImage(image) {
   if (!image || typeof image !== 'object') throw new Error('Invalid case image.');
   if (image.bytes != null && !(image.bytes instanceof Uint8Array)) throw new Error('Invalid image bytes.');
@@ -32,7 +42,8 @@ export function cleanCaseModel(model) {
     if (!preset || preset.key !== model.preset) throw new Error('Missing saved preset content.');
     presetSnapshot = { key: preset.key, title: caseString(preset.title), text: caseString(preset.text), description: caseString(preset.description || ''), version: caseString(preset.version) };
   }
-  return { name: caseString(model.name), role: caseString(model.role), description: caseString(model.description), groups, preset: model.preset, presetSnapshot, composition: model.composition, format: model.format };
+  const roles = Array.isArray(model.roles) ? model.roles.map(caseRole) : [];
+  return { name: caseString(model.name), role: caseString(model.role), description: caseString(model.description), groups, preset: model.preset, presetSnapshot, composition: model.composition, format: model.format, roles };
 }
 export function normalizeCaseSnapshot(snapshot) {
   if (!snapshot || snapshot.schema_version !== 1) throw new Error('Unsupported case version. Keep a backup and open it with a compatible builder.');
@@ -43,7 +54,7 @@ export function normalizeCaseSnapshot(snapshot) {
     created_at: snapshot.created_at, saved_at: snapshot.saved_at, model: cleanCaseModel(snapshot.model), view: { step: view.step, area: view.area } };
 }
 export function caseHasWork(model) {
-  return Boolean(model.name || model.role || model.description || model.preset !== 'none' || model.format !== 'single' || model.composition || Object.values(model.groups).some(g => g.text || g.files.length));
+  return Boolean(model.name || model.role || model.description || model.preset !== 'none' || model.format !== 'single' || model.composition || (model.roles && model.roles.some(r => r.active || r.isCustom)) || Object.values(model.groups).some(g => g.text || g.files.length));
 }
 export function caseConflict(message = 'This case changed in another tab. Open the latest copy or save your work as a separate case.') { const error = new Error(message); error.name = 'CaseConflictError'; return error; }
 export async function openCaseStorage(factory = globalThis.indexedDB) {

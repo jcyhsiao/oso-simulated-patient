@@ -13,6 +13,113 @@ function revokePreviews(key) {
 }
 let activeStep = 0, selectedArea = AREA_KEYS[0], revision = 0, urls = [];
 let caseSession, presetSnapshot = null, importGeneration = 0;
+let roles = [];
+
+function defaultRoles() {
+  return Object.values(APP_CONTENT.professionals || {}).map(p => ({
+    id: p.id,
+    title: p.title,
+    text: p.text,
+    isCustom: false,
+    active: false,
+  }));
+}
+
+function syncLearnerRole() {
+  const active = roles.filter(r => r.active);
+  if (!active.length) return;
+  const roleInput = byId('learner-role');
+  if (active.length === 1) {
+    roleInput.value = `${active[0].title} student`;
+  } else {
+    roleInput.value = `Interprofessional student team (${active.map(r => r.title).join(', ')})`;
+  }
+}
+
+function renderRoles() {
+  const selectedContainer = byId('selected-roles-container');
+  const availableContainer = byId('available-roles-container');
+  const details = byId('active-roles-details');
+  const countEl = byId('active-roles-count');
+  const editor = byId('active-roles-editor');
+  if (!selectedContainer || !availableContainer || !editor) return;
+
+  selectedContainer.replaceChildren();
+  availableContainer.replaceChildren();
+  editor.replaceChildren();
+
+  const active = roles.filter(r => r.active);
+  if (countEl) countEl.textContent = String(active.length);
+  if (details) details.hidden = active.length === 0;
+
+  if (active.length === 0) {
+    selectedContainer.append(element('span', 'No roles currently selected (using manual role title below).', 'sp-help'));
+  } else {
+    for (const role of active) {
+      const chip = element('span', undefined, 'sp-chip');
+      chip.setAttribute('aria-pressed', 'true');
+      const label = element('span', role.title);
+      const removeBtn = element('button', '✕', 'sp-chip-remove');
+      removeBtn.type = 'button';
+      removeBtn.title = `Deselect ${role.title}`;
+      removeBtn.setAttribute('aria-label', `Deselect ${role.title}`);
+      removeBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        role.active = false;
+        renderRoles();
+        syncLearnerRole();
+        update();
+      });
+      chip.append(label, removeBtn);
+      selectedContainer.append(chip);
+
+      const card = element('div', undefined, 'sp-role-card');
+      const header = element('div', undefined, 'sp-role-card-header');
+      header.append(element('span', role.title), element('span', role.isCustom ? 'Custom role' : 'AI draft profile', 'sp-badge-ai'));
+
+      const textarea = element('textarea');
+      textarea.rows = 4;
+      textarea.value = role.text;
+      textarea.placeholder = 'Role scope and boundaries...';
+      textarea.addEventListener('input', () => {
+        role.text = textarea.value;
+        update();
+      });
+
+      const actions = element('div', undefined, 'sp-file-actions');
+      if (!role.isCustom) {
+        const resetBtn = element('button', 'Reset to preset default', 'sp-button');
+        resetBtn.type = 'button';
+        resetBtn.addEventListener('click', () => {
+          const original = APP_CONTENT.professionals?.[role.id];
+          if (original) {
+            role.text = original.text;
+            textarea.value = original.text;
+            update();
+          }
+        });
+        actions.append(resetBtn);
+      }
+      card.append(header, textarea, actions);
+      editor.append(card);
+    }
+  }
+
+  const available = roles.filter(r => !r.active);
+  for (const role of available) {
+    const chip = element('button', `+ ${role.title}`, 'sp-chip');
+    chip.type = 'button';
+    chip.setAttribute('aria-pressed', 'false');
+    chip.addEventListener('click', () => {
+      role.active = true;
+      renderRoles();
+      syncLearnerRole();
+      update();
+    });
+    availableContainer.append(chip);
+  }
+}
+
 const revoked = () => { for (const url of urls) URL.revokeObjectURL(url); urls = []; };
 function invalidate() {
   revision++; revoked(); byId('build-result').hidden = true; byId('build-errors').hidden = true;
@@ -23,7 +130,8 @@ function model() {
   return { name: byId('case-name').value, role: byId('learner-role').value, description: byId('case-description').value,
     groups, preset: byId('feedback-preset').value, presetSnapshot,
     composition: document.querySelector('input[name=composition]:checked')?.value || '',
-    format: document.querySelector('input[name=format]:checked').value };
+    format: document.querySelector('input[name=format]:checked').value,
+    roles: roles.map(r => ({ ...r })) };
 }
 function selectionLabel(current) {
   try { return feedbackChoice(current, APP_CONTENT).label; }
@@ -202,6 +310,36 @@ byId('feedback-preset').addEventListener('change', chooseCurrentPreset);
 byId('update-preset').addEventListener('click', chooseCurrentPreset); document.querySelectorAll('input[name=composition],input[name=format]').forEach(input => input.addEventListener('change', update));
 byId('build').addEventListener('click', buildPackage); window.addEventListener('pagehide', () => { revoked(); for (const key of previewUrls.keys()) revokePreviews(key); });
 window.addEventListener('pageshow', event => { if (event.persisted) { for (const key of groupElements.keys()) renderFiles(key); update(); } });
+byId('add-custom-role-btn')?.addEventListener('click', () => {
+  byId('custom-role-form').hidden = false;
+  byId('custom-role-title').focus();
+});
+byId('cancel-custom-role-btn')?.addEventListener('click', () => {
+  byId('custom-role-form').hidden = true;
+  byId('custom-role-title').value = '';
+  byId('custom-role-text').value = '';
+});
+byId('save-custom-role-btn')?.addEventListener('click', () => {
+  const title = byId('custom-role-title').value.trim();
+  if (!title) return;
+  const text = byId('custom-role-text').value.trim();
+  const newRole = {
+    id: `custom-${Date.now()}`,
+    title,
+    text: text || `# PROFESSIONAL: ${title}\nAI-authored custom role for faculty review.\n\n## Role and scope\n${title} participating in this simulation.`,
+    isCustom: true,
+    active: true
+  };
+  roles.push(newRole);
+  byId('custom-role-title').value = '';
+  byId('custom-role-text').value = '';
+  byId('custom-role-form').hidden = true;
+  renderRoles();
+  syncLearnerRole();
+  update();
+});
+roles = defaultRoles();
+renderRoles();
 showStep(0); showArea(selectedArea); update();
 
 caseSession = setupCaseSession({
@@ -211,6 +349,8 @@ caseSession = setupCaseSession({
     importGeneration++;
     const state = record?.model;
     byId('case-name').value = state?.name || ''; byId('learner-role').value = state?.role || ''; byId('case-description').value = state?.description || '';
+    roles = (state?.roles && state.roles.length) ? state.roles.map(r => ({ ...r })) : defaultRoles();
+    renderRoles();
     for (const [key, refs] of groupElements) { groups[key] = state ? state.groups[key] : { text: '', files: [] }; refs.text.value = groups[key].text; refs.file.value = ''; renderFiles(key); }
     presetSnapshot = state?.presetSnapshot || null; byId('feedback-preset').value = state?.preset || 'none';
     for (const input of document.querySelectorAll('input[name=composition]')) input.checked = input.value === state?.composition;

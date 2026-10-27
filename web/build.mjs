@@ -1,14 +1,26 @@
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readdir, readFile, writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 const root = path.dirname(fileURLToPath(import.meta.url));
 const read = name => readFile(path.join(root, name), 'utf8');
 const runtime = await read('content/runtime.md');
-const content = { version: '2026-10-27-5', runtime, setup: await read('content/setup-checks.md'), presets: {
+
+const profDir = path.join(root, 'content/professionals');
+const profFiles = (await readdir(profDir)).filter(f => f.endsWith('.md')).sort();
+const professionals = {};
+for (const file of profFiles) {
+  const text = await readFile(path.join(profDir, file), 'utf8');
+  const id = path.basename(file, '.md');
+  const titleMatch = text.match(/^# PROFESSIONAL:\s*(.+)$/m);
+  const title = titleMatch ? titleMatch[1].trim() : id;
+  professionals[id] = { id, title, text };
+}
+
+const content = { version: '2026-10-27-6', runtime, setup: await read('content/setup-checks.md'), presets: {
   fnp: { title: 'FNP OSCE', description: 'NPSCA-informed qualitative feedback: 17 items in four domains, using the supplied April 10, 2024 revision. Supply case-specific targets separately; no numeric grades or pass/fail.', text: await read('content/fnp-osce.md') },
   ipe: { title: 'Buckeye IPE', description: 'Six BuckIPE domains with local N/O, 0, 1 and 2 formative anchors. No aggregate score or pass/fail; unavailable opportunities remain N/O.', text: await read('content/buckeye-ipe.md') },
-} };
+}, professionals };
 async function inlineCss(filename) {
   let css = await readFile(filename, 'utf8');
   const imports = [...css.matchAll(/@import\s+["']([^"']+)["'];/g)];

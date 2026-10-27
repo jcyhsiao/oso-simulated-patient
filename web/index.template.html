@@ -22,7 +22,34 @@
 <div class="sp-workspace"><div>
 <section data-panel="0" aria-labelledby="case-heading">
 <h2 id="case-heading">Describe the encounter</h2>
-<div class="sp-card"><label class="sp-field">Case name <span class="sp-required">required</span><input id="case-name" type="text" autocomplete="off" required></label><label class="sp-field">Learner role <span class="sp-required">required</span><input id="learner-role" type="text" placeholder="For example, third-year dental hygiene student" autocomplete="off" required></label><p class="sp-help">Include profession, program or training level. The hosting model uses the supplied role and scope.</p><label class="sp-field">Brief description <span class="sp-optional">optional</span><textarea id="case-description" rows="3"></textarea></label><p class="sp-help">This is an online simulation of your supplied clinical setting. An office case can remain office-based. A human timekeeper manages any assessment timing.</p></div>
+<div class="sp-card"><label class="sp-field">Case name <span class="sp-required">required</span><input id="case-name" type="text" autocomplete="off" required></label>
+<div class="sp-roles-section">
+  <label class="sp-field">Learner audience and professional roles <span class="sp-optional">presets or custom</span></label>
+  <div class="sp-context">
+    <p class="sp-help">Select one or more participating disciplines, or add custom roles. Preset profiles are AI-generated starter drafts for faculty review and customization; they are not validated clinical practice standards.</p>
+  </div>
+  <div id="selected-roles-container" class="sp-chip-group" aria-label="Selected professional roles"></div>
+  <div class="sp-preset-roles">
+    <span class="sp-help">Available presets (click to toggle):</span>
+    <div id="available-roles-container" class="sp-chip-group" aria-label="Available role presets"></div>
+  </div>
+  <div class="sp-custom-role-action">
+    <button type="button" id="add-custom-role-btn" class="sp-button">+ Add custom role</button>
+  </div>
+  <div id="custom-role-form" class="sp-context" hidden>
+    <label class="sp-field">Custom role title <input id="custom-role-title" type="text" placeholder="For example, Graduate student in the FNP program" autocomplete="off"></label>
+    <label class="sp-field">Role and scope summary <span class="sp-optional">optional</span><textarea id="custom-role-text" rows="3" placeholder="Describe role, scope, priorities or boundaries..."></textarea></label>
+    <div class="sp-case-buttons">
+      <button type="button" id="save-custom-role-btn" class="sp-button sp-primary">Add role</button>
+      <button type="button" id="cancel-custom-role-btn" class="sp-button">Cancel</button>
+    </div>
+  </div>
+  <details id="active-roles-details" hidden>
+    <summary>Inspect or customize selected role scopes (<span id="active-roles-count">0</span>)</summary>
+    <div id="active-roles-editor" class="sp-roles-editor"></div>
+  </details>
+</div>
+<label class="sp-field">Learner role <span class="sp-required">required</span><input id="learner-role" type="text" placeholder="For example, third-year dental hygiene student" autocomplete="off" required></label><p class="sp-help">Include profession, program or training level. Auto-populated from active roles or entered manually.</p><label class="sp-field">Brief description <span class="sp-optional">optional</span><textarea id="case-description" rows="3"></textarea></label><p class="sp-help">This is an online simulation of your supplied clinical setting. An office case can remain office-based. A human timekeeper manages any assessment timing.</p></div>
 <div class="sp-card"><h3>Course or assignment context <span class="sp-optional">optional</span></h3><p class="sp-help">Paste relevant syllabus or assignment excerpts, attach files, or use both. This context does not automatically become patient facts or feedback criteria.</p><div data-input-group="context"></div></div>
 </section>
 <section data-panel="1" aria-labelledby="materials-heading" hidden><h2 id="materials-heading">Add prepared case materials</h2><p>Keep each source in its intended area. Text and files are included together.</p><div class="sp-area-tabs" role="group" aria-label="Material areas"><button type="button" data-area="learner-has-info" aria-pressed="true">Learner</button><button type="button" data-area="consultants-have-info" aria-pressed="false">Consultants</button><button type="button" data-area="facilitator-observation-reference" aria-pressed="false">Facilitator</button><button type="button" data-area="patient-parameters-and-disclosable-info" aria-pressed="false">Patient</button></div>

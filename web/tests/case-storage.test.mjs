@@ -6,6 +6,10 @@ import { createZip } from '../zip.mjs';
 function caseFixture() {
   return { schema_version: 1, builder_version: 'test', id: 'original', revision: 3, created_at: '2026-10-27T12:00:00Z', saved_at: '2026-10-27T13:00:00Z', view: { step: 2, area: 'patient-parameters-and-disclosable-info' }, model: {
     name: 'Case 🦷', role: 'Learner', description: 'Optional\ncontext', preset: 'fnp', presetSnapshot: { key: 'fnp', title: 'Pinned preset', text: 'ORIGINAL PRESET', description: 'Original', version: 'old' }, composition: 'supplement', format: 'skills',
+    roles: [
+      { id: 'dh', title: 'Dental Hygiene', text: 'DH scope', isCustom: false, active: true },
+      { id: 'custom-fnp', title: 'Graduate student in the FNP program', text: 'FNP scope', isCustom: true, active: false }
+    ],
     groups: Object.fromEntries(CASE_GROUP_KEYS.map(key => [key, { text: 'Authored ' + key, files: [{ status: 'ready', kind: 'text', name: key + '.docx', text: 'Extracted ' + key, warning: 'Verify source', images: [{ name: 'a.png', label: 'Visual 1', bytes: new Uint8Array([137, 80, 78, 71]), metadata: [{ label: 'Alt', text: 'Unreviewed source' }], description: 'Reviewed description', releaseCondition: 'When asked', excluded: key === 'context', reviewOpen: true }] }] }]))
   } };
 }

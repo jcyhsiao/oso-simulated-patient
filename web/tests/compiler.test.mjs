@@ -122,3 +122,23 @@ test('online simulation, human timekeeping and authorized record rules appear in
   }
   assert.doesNotMatch(content.runtime, /Shannon|gout|HCTZ|January 29/);
 });
+
+test('selected and custom professional roles synthesize into feedback with provenance notice', () => {
+  const model = fixture();
+  model.preset = 'ipe';
+  model.roles = [
+    { id: 'dental-hygiene', title: 'Dental Hygiene', text: 'DH SCOPE: oral health prevention', isCustom: false, active: true },
+    { id: 'custom-fnp', title: 'Graduate student in the FNP program', text: 'FNP SCOPE: advanced primary care', isCustom: true, active: true }
+  ];
+  const result = compileEncounter(model, content);
+  assert.deepEqual(result.errors, []);
+  assert.match(result.feedbackText, /# Participating learner professional roles and scope boundaries/);
+  assert.match(result.feedbackText, /AI-generated starter drafts for faculty review and customization/);
+  assert.match(result.feedbackText, /DH SCOPE: oral health prevention/);
+  assert.match(result.feedbackText, /FNP SCOPE: advanced primary care/);
+  assert.match(result.caseText, /Participating professions: Dental Hygiene, Graduate student in the FNP program/);
+  assert.equal(result.manifest.participating_roles.length, 2);
+  assert.equal(result.manifest.participating_roles[0].title, 'Dental Hygiene');
+  assert.equal(result.manifest.participating_roles[1].isCustom, true);
+});
+
