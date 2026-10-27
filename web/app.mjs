@@ -1,4 +1,4 @@
-import { compileEncounter, AREA_KEYS, AREA_LABELS, feedbackChoice } from './compiler.mjs';
+import { compileEncounter, AREA_KEYS, AREA_LABELS, feedbackChoice, slugify } from './compiler.mjs';
 import { createZip } from './zip.mjs';
 import { importPreparedFile } from './imports.mjs';
 import { setupCaseSession } from './case-session.mjs';
@@ -125,8 +125,6 @@ function invalidate() {
   revision++; revoked(); byId('build-result').hidden = true; byId('build-errors').hidden = true;
   if (byId('copy-instructions')) byId('copy-instructions').hidden = true;
   if (byId('download-instructions')) byId('download-instructions').hidden = true;
-  if (byId('copy-synthesis')) byId('copy-synthesis').hidden = true;
-  if (byId('download-synthesis')) byId('download-synthesis').hidden = true;
   byId('build-status').textContent = '';
 }
 function model() {
@@ -294,21 +292,18 @@ function buildPackage() {
     if (result.warnings.length) { warnings.append(element('h3', 'Build notes')); const list = element('ul'); result.warnings.forEach(note => list.append(element('li', note))); warnings.append(list); }
 
     byId('generated-preview').textContent = result.directInstructions;
-    if (byId('synthesis-preview')) byId('synthesis-preview').textContent = result.synthesisPrompt;
 
     const badge = byId('instruction-count-badge');
     if (badge && result.instructionCounts) {
       const count = result.instructionCounts.maximum;
       badge.textContent = `${count.toLocaleString()} / 48,000 units`;
-      badge.style.backgroundColor = count <= 48000 ? '#e6f4ea' : count <= 50000 ? '#fef7e0' : '#fce8e6';
-      badge.style.color = count <= 48000 ? '#137333' : count <= 50000 ? '#b06000' : '#ba0c2f';
+      badge.style.backgroundColor = count < 48000 ? '#e6f4ea' : '#fce8e6';
+      badge.style.color = count < 48000 ? '#137333' : '#ba0c2f';
     }
 
     byId('build-result').hidden = false;
     if (byId('copy-instructions')) byId('copy-instructions').hidden = false;
     if (byId('download-instructions')) byId('download-instructions').hidden = false;
-    if (byId('copy-synthesis')) byId('copy-synthesis').hidden = false;
-    if (byId('download-synthesis')) byId('download-synthesis').hidden = false;
     byId('build-status').textContent = 'Instructions compiled! Click "Copy instructions to clipboard" below, then paste directly into Canvas AI Assistant.';
   } catch (error) { byId('build-errors').textContent = `Could not compile instructions: ${error.message}`; byId('build-errors').hidden = false; revoked(); }
 }
@@ -338,27 +333,6 @@ byId('download-instructions')?.addEventListener('click', () => {
   const a = document.createElement('a');
   a.href = url;
   a.download = `${slugify(name)}-canvas-instructions.md`;
-  a.click();
-  byId('build-status').textContent = 'Download started.';
-});
-byId('copy-synthesis')?.addEventListener('click', async () => {
-  const text = byId('synthesis-preview') ? byId('synthesis-preview').textContent : byId('generated-preview').textContent;
-  try {
-    await navigator.clipboard.writeText(text);
-    byId('build-status').textContent = 'Copied synthesis prompt to clipboard! Paste into OSU Gemini or Microsoft Copilot.';
-  } catch {
-    byId('build-status').textContent = 'Clipboard access denied. Select all text in the preview below and copy manually.';
-  }
-});
-byId('download-synthesis')?.addEventListener('click', () => {
-  const text = byId('synthesis-preview') ? byId('synthesis-preview').textContent : byId('generated-preview').textContent;
-  const name = byId('case-name').value.trim() || 'simulated-patient';
-  const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  urls.push(url);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${slugify(name)}-synthesis-prompt.md`;
   a.click();
   byId('build-status').textContent = 'Download started.';
 });

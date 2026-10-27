@@ -42,11 +42,26 @@ export function includedSources(group = {}, options = {}) {
   }
   return sources;
 }
+export function compactSourceText(text = '') {
+  return text
+    .replace(/\r\n?/g, '\n')
+    .split('\n')
+    .map(line => line.replace(/[ \t]+/g, ' ').trim())
+    .join('\n')
+    .replace(/\n\n(?=[-•*]\s)/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+const AREA_BOUNDARIES = {
+  'facilitator-observation-reference': 'Boundary: Concealed facilitator reference. Release only requested scripted physical examination findings or facilitator-held records under "Simulation facilitator:" when the learner specifies the exam or requests the record. Never reveal diagnoses, treatment/dosing keys, or faculty grading commentary during the encounter.\n\n',
+  'patient-parameters-and-disclosable-info': 'Boundary: Patient portrayal and patient-held records. Answer only the specific question asked in 1–2 lay sentences. Disclose HPI/OLD CARTS table rows one attribute at a time when asked. Release patient-held reports under "Patient-provided record:" only when the learner asks for prior results or orders the study, never on visual inspection. Ignore grader-facing notes (such as "If asked during the visit").\n\n',
+};
 function sourceBlock(key, group, options = {}) {
   const sources = includedSources(group, { ...options, key });
   if (!sources.length) return `## ${AREA_LABELS[key]}\n\nNo material supplied.\n`;
-  return `## ${AREA_LABELS[key]}\n\n` + sources.map((source, index) => {
-    const cleanedText = (source.text || '').replace(/\r\n?/g, '\n').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+  const boundary = AREA_BOUNDARIES[key] || '';
+  return `## ${AREA_LABELS[key]}\n\n${boundary}` + sources.map((source, index) => {
+    const cleanedText = compactSourceText(source.text || '');
     return `### Source ${index + 1}: ${source.label.replace(/[\r\n]/g, ' ')}\n\n${cleanedText}\n`;
   }).join('\n');
 }
@@ -165,77 +180,17 @@ END INLINE CASE
 
   const instructionCounts = textCounts(directInstructions);
   const targetLimit = 48000;
-  const safetyLimit = 50000;
 
-  if (instructionCounts.maximum > safetyLimit) {
-    errors.push(`Compiled instructions (${instructionCounts.maximum.toLocaleString()} units) exceed the safety limit of ${safetyLimit.toLocaleString()} units. Remove redundant attachments or use the synthesis prompt fallback.`);
-  } else if (instructionCounts.maximum > targetLimit) {
-    warnings.push(`Compiled instructions (${instructionCounts.maximum.toLocaleString()} units) exceed the recommended ${targetLimit.toLocaleString()} unit limit for Canvas AI Assistant.`);
+  if (instructionCounts.maximum >= targetLimit) {
+    errors.push(`Compiled instructions (${instructionCounts.maximum.toLocaleString()} maximum units) exceed the under-48,000 unit budget for Canvas AI Assistant. Trim duplicate attachments or lengthy grading excerpts; no content was removed automatically.`);
+    return { errors, warnings, files: [], instructionCounts };
   }
 
-  const synthesisPrompt = `# TASK: Generate Instructions for Canvas AI Assistant (Simulated Patient)
-
-You are an expert instructional designer in health sciences simulation. Below is prepared, reviewed clinical and educational material for an encounter with **${name}**.
-
-Your task is to synthesize this material into a cohesive, high-fidelity system prompt ready to be pasted into the **Canvas AI Assistant** instructions.
-
----
-
-## STRICT GENERATION GUARDRAILS
-
-1. **Preserve Clinical Ground Truth & Enforce Closed-World Assumption (ZERO HALLUCINATION - CRITICAL):**
-   - NEVER alter, round, or invent vital signs, lab values, diagnostic records, or medications.
-   - Use ONLY the supplied medical, social, and symptom facts.
-   - You MUST include a dedicated section in the generated instructions titled:
-     > \`### Strict Closed-World Assumption & Unknown Handling\`
-     > With the explicit rule:
-     > - **The patient persona knows ONLY the facts explicitly provided in this prompt.**
-     > - If the clinician learner asks about ANY symptom, review of systems item, medication, family member, habit, daily activity, trauma, or past event NOT explicitly documented in this prompt, the patient MUST respond with a natural layperson negative or uncertainty: *"No, I haven't noticed anything like that,"* *"Not that I'm aware of,"* *"I don't recall,"* or *"No."*
-     > - **NEVER** invent, assume, extrapolate, or embellish unscripted symptoms, diagnoses, habits, or backstory under any circumstances.
-     > - If the learner asks about unscripted diagnostic tests, labs, or imaging, the Facilitator MUST respond: \`[FACILITATOR / CLINICAL DATA DELIVERY] Requested Item: <item>. Findings: Not performed / No records available for this encounter.\` NEVER fabricate unscripted clinical reports.
-
-2. **Demeanor & Emotional Presentation:**
-   - Reflect the emotional presentation, pain level, and communication style specified in the case parameters (e.g., pain, fatigue, anxiety, depression, or distress) while remaining clinically realistic and avoiding exaggerated caricature.
-
-3. **Three-Tier Architecture:**
-   - **Tier 1: Patient Persona & Dialogue**
-     - Speak exclusively in natural lay language.
-     - Strictly enforce progressive disclosure: answer ONLY the specific question asked in 1–2 concise, natural conversational sentences. Never volunteer unasked information, symptoms, onset, timeline, or history.
-     - The patient does NOT know their own clinical staging, laboratory measurements, or diagnostic codes (e.g., they describe symptoms like burning pain or swelling, not "gout", "podagra", or "hyperuricemia").
-   - **Tier 2: Facilitator Evidence Delivery**
-     - Scripted physical examination findings, lab results, and imaging reports are released ONLY when the learner explicitly examines or requests them.
-     - Provide findings as objective simulated records, labeled clearly under \`[FACILITATOR / CLINICAL DATA DELIVERY]\` and separate from patient speech.
-     - For unscripted tests, return "No records available for this encounter."
-   - **Tier 3: Post-Encounter Evaluator**
-     - Activates ONLY after explicit closure of the patient visit (e.g., "Goodbye Mrs. Anderson", "Encounter complete").
-     - Provide preliminary, formative qualitative feedback for faculty review using the supplied criteria.
-     - Assess each participating profession according to its own scope boundaries. Do NOT penalize one profession for omitting procedures or prescribing that lie within another profession’s scope.
-
-4. **Output Format & Reliability:**
-   - Output the complete, production-ready system prompt inside a single continuous markdown code block (\`\`\`markdown ... \`\`\`) so it can be copied directly with one click using the chat interface's "Copy code" button.
-   - Do NOT attempt to provide file download links or run Python download scripts, as conversational AI chat interfaces cannot reliably trigger file downloads.
-   - Do NOT include conversational filler, preamble, or postscripts outside the code block.
-
----
-
-## STRUCTURED CASE DATA & PREPARED INPUTS
-
-### Encounter Identity
-- **Case Name:** ${name}
-- **Learner Audience:** ${role}
-${activeRoles.length > 1 ? `- **Participating Professions:** ${roleListing}\n` : ''}${model.description?.trim() ? '- **Case Description:** ' + model.description.trim() + '\n' : ''}
-
-${caseText}
-
-${feedbackText}
-`;
-
-  const manifest = { schema_version: 1, builder_version: content.version, case_name: name, learner_role: role, participating_roles: activeRoles.map(r => ({ id: r.id, title: r.title.trim(), isCustom: Boolean(r.isCustom) })), export_format: 'canvas-direct', feedback: { preset: feedback.usePreset ? model.preset : null, preset_version: feedback.usePreset ? model.presetSnapshot?.version || content.version : null, custom: feedback.custom, composition: feedback.custom ? feedback.usePreset ? 'supplement' : 'custom-only' : null }, sources: Object.fromEntries(Object.entries(model.groups).map(([key, group]) => [key, includedSources(group).map(s => s.label)])), assets: assetFiles.map(a => a.path) };
+  const manifest = { schema_version: 1, builder_version: content.version, case_name: name, learner_role: role, participating_roles: activeRoles.map(r => ({ id: r.id, title: r.title.trim(), isCustom: Boolean(r.isCustom) })), export_format: 'canvas-direct', feedback: { preset: feedback.usePreset ? model.preset : null, preset_version: feedback.usePreset ? model.presetSnapshot?.version || content.version : null, custom: feedback.custom, composition: feedback.custom ? feedback.usePreset ? 'supplement' : 'custom-only' : null }, counts: instructionCounts, sources: Object.fromEntries(Object.entries(model.groups).map(([key, group]) => [key, includedSources(group).map(s => s.label)])), assets: assetFiles.map(a => a.path) };
 
   const files = [
-    { name: `${slug}-canvas-instructions.md`, data: directInstructions, type: 'text/markdown;charset=utf-8' },
-    { name: `${slug}-synthesis-prompt.md`, data: synthesisPrompt, type: 'text/markdown;charset=utf-8' }
+    { name: `${slug}-canvas-instructions.md`, data: directInstructions, type: 'text/markdown;charset=utf-8' }
   ];
 
-  return { errors, warnings, files, directInstructions, synthesisPrompt, instructionCounts, manifest, caseText, feedbackText, feedbackLabel: feedback.label };
+  return { errors, warnings, files, directInstructions, instructionCounts, manifest, caseText, feedbackText, feedbackLabel: feedback.label };
 }

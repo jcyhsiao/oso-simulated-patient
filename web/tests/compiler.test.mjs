@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { compileEncounter, textCounts, renderScalar, AREA_KEYS, pruneProfessionalScope } from '../compiler.mjs';
 import { createZip, readZip } from '../zip.mjs';
@@ -27,19 +28,23 @@ function fixture() {
   };
 }
 
-test('canvas direct export produces ready-to-paste instructions and optional synthesis prompt', () => {
+test('canvas direct export produces ready-to-paste instructions and enforces under-48,000 unit budget', () => {
   const model = fixture();
   model.groups.context.text = 'Course example: a different patient.';
   model.groups['learner-has-info'].text = 'Learner already knows the color.';
   const result = compileEncounter(model, content);
   assert.deepEqual(result.errors, []);
-  assert.equal(result.files.length, 2);
+  assert.equal(result.files.length, 1);
   assert.equal(result.files[0].name, 'example-person-canvas-instructions.md');
-  assert.equal(result.files[1].name, 'example-person-synthesis-prompt.md');
   assert.ok(result.instructionCounts.maximum < 48000);
   assert.match(result.directInstructions, /# Example person — Simulated Patient Instructions/);
-  assert.match(result.directInstructions, /STRICT CLOSED-WORLD CONSTRAINT/);
-  assert.match(result.synthesisPrompt, /TASK: Generate Instructions for Canvas AI Assistant/);
+  assert.match(result.directInstructions, /STRICT CLOSED-WORLD GROUNDING/);
+
+  const huge = fixture();
+  huge.groups[AREA_KEYS[3]].text = 'a'.repeat(49000);
+  const blocked = compileEncounter(huge, content);
+  assert.equal(blocked.files.length, 0);
+  assert.match(blocked.errors.join(), /under-48,000/);
 });
 
 test('preset/custom feedback combinations preserve independent criteria', () => {
@@ -179,23 +184,32 @@ test('embedded alt text is not exported until reviewed; images stay in assigned 
   assert.match(result.warnings.join(), /explicitly excluded/);
 });
 
-test('synthesis prompt contains strict guardrails, three-tier architecture, and demeanor instructions', () => {
+test('online simulation, human timekeeping, authorized record rules, and closed-world anti-hallucination rules are present', () => {
   const model = fixture();
   model.preset = 'fnp';
   model.groups.context.text = 'Historical classroom logistics: enter the clinic room; overhead warning after 15 minutes.';
+  model.groups['facilitator-observation-reference'].text = 'FACILITATOR PHYSICAL EXAM AND HISTORICAL RECORDS';
   model.groups[AREA_KEYS[3]].text = 'PATIENT FACTS. Patient holds an existing report, available on relevant request.';
   model.groups.feedback.text = 'FACULTY TARGET ONLY';
   model.composition = 'supplement';
   const result = compileEncounter(model, content);
   assert.deepEqual(result.errors, []);
-  const prompt = result.synthesisPrompt;
-  assert.match(prompt, /TASK: Generate Instructions for Canvas AI Assistant/);
-  assert.match(prompt, /Preserve Clinical Ground Truth/);
-  assert.match(prompt, /Demeanor & Emotional Presentation/);
-  assert.match(prompt, /Three-Tier Architecture/);
-  assert.match(prompt, /Tier 1: Patient Persona & Dialogue/);
-  assert.match(prompt, /Tier 2: Facilitator Evidence Delivery/);
-  assert.match(prompt, /Tier 3: Post-Encounter Evaluator/);
+  const text = result.files[0].data;
+  assert.match(text, /Preserve the supplied fictional clinical setting, including an office-based scenario/i);
+  assert.match(text, /Assessment timing is managed by a human assessor or timekeeper/i);
+  assert.match(text, /Do not run an imaginary timer, infer elapsed time from turns, announce a countdown\/overhead warning/i);
+  assert.match(text, /Interpret physical classroom directions within the simulation/i);
+  assert.match(text, /Discovery and result delivery are distinct/i);
+  assert.match(text, /Patient-provided record:/);
+  assert.match(text, /Simulation facilitator:/);
+  assert.match(text, /Visual vs\. diagnostic requests:/);
+  assert.match(text, /If the learner asks about a symptom or complaint not listed as present/);
+  assert.match(text, /If the learner asks for biographical, lifestyle, dietary, or historical details not specified/);
+  assert.match(text, /Unsupplied exams, labs, and imaging \(STRICT ZERO-FABRICATION RULE\):/);
+  assert.match(text, /When a source document lists history in an HPI or OLD CARTS table/);
+  assert.match(text, /Boundary: Concealed facilitator reference\./);
+  assert.match(text, /Boundary: Patient portrayal and patient-held records\./);
+  assert.doesNotMatch(content.runtime, /Shannon|Anderson|gout|HCTZ|hydrochlorothiazide|indomethacin|uric acid|first MTP/i);
 });
 
 test('selected and custom professional roles synthesize into feedback with provenance notice', () => {
@@ -215,4 +229,78 @@ test('selected and custom professional roles synthesize into feedback with prove
   assert.equal(result.manifest.participating_roles.length, 2);
   assert.equal(result.manifest.participating_roles[0].title, 'Dental Hygiene');
   assert.equal(result.manifest.participating_roles[1].isCustom, true);
+});
+
+test('fnp-shannon-anderson case files compile comfortably under the 48,000 unit budget', async () => {
+  const baseDir = new URL('../../case-files/fnp-shannon-anderson/', import.meta.url);
+  function loadDoc(relPath) {
+    const fullPath = fileURLToPath(new URL(relPath, baseDir));
+    const name = relPath.split('/').pop();
+    const pyScript = [
+      'import sys, json, re, zipfile, xml.etree.ElementTree as ET',
+      'W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"',
+      'MC = "{http://schemas.openxmlformats.org/markup-compatibility/2006}"',
+      'def clean_mc(el):',
+      '    for c in list(el):',
+      '        if c.tag == MC + "AlternateContent":',
+      '            ch = c.find(MC + "Choice")',
+      '            if ch is not None:',
+      '                i = list(el).index(c); el.remove(c)',
+      '                for sub in reversed(list(ch)): el.insert(i, sub)',
+      '                continue',
+      '        clean_mc(c)',
+      'with zipfile.ZipFile(sys.argv[1]) as z:',
+      '    root = ET.fromstring(z.read("word/document.xml"))',
+      'clean_mc(root)',
+      'lines = [re.sub(r"[ \\t]+", " ", "".join(t.text or "" for t in p.iter(W + "t"))).strip() for p in root.iter(W + "p")]',
+      'print(json.dumps("\\n".join(x for x in lines if x)))'
+    ].join('\n');
+    const py = spawnSync('python3', ['-B', '-c', pyScript, fullPath], { encoding: 'utf8' });
+    assert.equal(py.status, 0, py.stderr);
+    return { name, status: 'ready', kind: 'text', text: JSON.parse(py.stdout), images: [] };
+  }
+
+  const primaryCareText = await readFile(new URL('../content/professionals/primary-care.md', import.meta.url), 'utf8');
+  const model = {
+    name: 'Shannon Anderson',
+    role: 'Primary Care / Advanced Practice Provider (FNP/AGPCNP) student',
+    description: '67-year-old female presenting to an outpatient primary care clinic with acute right foot pain.',
+    groups: {
+      context: { text: '', files: [] },
+      'learner-has-info': {
+        text: '',
+        files: [
+          loadDoc('learner-has-info/Shannon Anderson Case B Chart Snapshot.docx'),
+          loadDoc('learner-has-info/Shannon Anderson Case B DOOR Intake Note SP 2026.docx'),
+        ]
+      },
+      'consultants-have-info': { text: '', files: [] },
+      'facilitator-observation-reference': {
+        text: '',
+        files: [
+          loadDoc('facilitator-observation-reference/Faculty Sheet for Gout OSCE SP 2026.docx'),
+          loadDoc('facilitator-observation-reference/Shannon Anderson Case B Lab 032025.docx'),
+          loadDoc('facilitator-observation-reference/Shannon Anderson Case B Lab Report 0325 Faculty Copy.docx'),
+        ]
+      },
+      'patient-parameters-and-disclosable-info': {
+        text: '',
+        files: [
+          loadDoc('patient-parameters-and-disclosable-info/Teaching of SP for Gout Case B SP 2026.docx'),
+          loadDoc('patient-parameters-and-disclosable-info/Shannon Anderson Case B Lab Interpratation During Visit.docx'),
+          loadDoc('patient-parameters-and-disclosable-info/The Ohio State Radiology Report Case B.docx'),
+          loadDoc('patient-parameters-and-disclosable-info/Left Foot Image.docx'),
+        ]
+      },
+      feedback: { text: '', files: [] }
+    },
+    preset: 'fnp',
+    composition: '',
+    roles: [{ id: 'primary-care', title: 'Primary Care / Advanced Practice Provider (FNP/AGPCNP)', text: primaryCareText, isCustom: false, active: true }]
+  };
+
+  const result = compileEncounter(model, content);
+  assert.deepEqual(result.errors, []);
+  assert.equal(result.files.length, 1);
+  assert.ok(result.instructionCounts.maximum < 48000, `Expected < 48,000 maximum units, got ${result.instructionCounts.maximum}`);
 });

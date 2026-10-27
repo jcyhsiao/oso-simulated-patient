@@ -18,7 +18,7 @@ function paragraphText(element) {
     for (const child of node.children) visit(child);
   }
   visit(element);
-  return text;
+  return text.split('\n').map(line => line.replace(/[ \t]+/g, ' ').trim()).join('\n');
 }
 function extractWordBody(element) {
   const blocks = [];

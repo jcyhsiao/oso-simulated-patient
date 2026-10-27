@@ -2,24 +2,23 @@
 
 Updated October 27, 2026. Instructor/developer context only: do not paste this handoff into a patient agent or give it to learners. Paths are relative to this project so the entire folder can be moved. This document consolidates the earlier incremental notes and describes the current state.
 
-## Direct Canvas AI Assistant compilation & IPE multi-role architecture (October 27, 2026)
+## Direct Canvas AI Assistant compilation, restored runtime baseline & closed-world anti-hallucination rules (October 27, 2026)
 
-- **Eliminated AI Middleman Friction:**
-  - Transitioned the Web Builder's primary output from an intermediate meta-synthesis prompt (which required faculty to copy to Gemini/Copilot, where chat UIs failed to download markdown files and unconstrained models hallucinated unscripted facts) to **Direct System Instructions for Canvas AI Assistant**.
-  - Faculty click **"Compile instructions"** and can immediately **"Copy instructions to clipboard"** or **"Download instructions (.md)"**, pasting straight into Canvas AI Assistant.
-  - A fallback expandable accordion still provides the Gemini/Copilot synthesis prompt if faculty ever assemble an abnormally large 60k+ unit scenario.
+- **Direct-Only Compilation for Canvas AI Assistant (No AI Middleman):**
+  - Removed the intermediate Gemini/Copilot synthesis prompt workflow after live testing showed that external chat UIs could not reliably trigger markdown file downloads and that LLM prompt synthesis stripped critical runtime rules (such as `"Patient-provided record:"` vs. `"Simulation facilitator:"` ownership) and hallucinated unscripted clinical findings.
+  - Step 4 of the Web Builder (`web/compiler.mjs`, `web/app.mjs`, `web/index.template.html`) now compiles a single production-ready Canvas AI Assistant instruction file (`${slug}-canvas-instructions.md`) directly in the browser and enforces a strict `< 48,000` maximum-unit budget (`Math.max(utf16, crlf, utf8)`).
+
+- **Restored `ce18b42` Runtime Baseline + Closed-World Anti-Hallucination Hardening (`web/content/runtime.md`):**
+  - Restored all original tested runtime sections from commit `ce18b42` (`ONLINE SIMULATION AND HUMAN TIMING`, `ROLE AND KNOWLEDGE BOUNDARIES`, `NATURAL ENTRY, PROGRESSIVE DISCLOSURE AND UNSCRIPTED QUESTIONS`, `LEARNER AND COURSE CONTEXT`, `RECORDS, FINDINGS AND AUTHORIZED DELIVERY`, `EXPLICIT CONSULTANT CONTENT`, `PLANS AND CLOSURE`, `EVIDENCE AND PRELIMINARY FEEDBACK`), tightened to `11,977` maximum units (`12,044` bytes).
+  - Hardened the three live-test failure modes identified in Canvas AI Assistant:
+    1. **Unscripted patient history/symptom questions:** Explicit rule distinguishing unscripted symptom inquiries (respond with a natural lay negative, e.g., *"No, I haven't noticed anything like that"*) from unscripted biographical/lifestyle/history details (respond briefly in character with lay uncertainty, e.g., *"I'm not really sure"* or *"Nothing special that I can think of"*).
+    2. **Unsupplied physical exam, laboratory, or imaging requests:** Explicit zero-fabrication rule prohibiting invented normal or abnormal exam findings, vitals, labs, or imaging; unsupplied requests return `"Simulation facilitator: No scripted findings or records are available in this case for the requested examination or study."`
+    3. **HPI / OLD CARTS tables & grader commentary:** Explicit rule treating each row of an HPI or OLD CARTS table as a separate attribute disclosed only when specifically asked (1–2 sentences per turn), and ignoring grader-facing headings (such as *"If asked during the visit"*) alongside section-level boundary reminders in `web/compiler.mjs` (`AREA_BOUNDARIES`).
 
 - **Under 48,000 Units Optimization (Shannon Anderson Benchmark):**
-  - Shannon Anderson previously produced 52,542 units, tripping the 50,000 safety threshold.
-  - Reduced the case to **39,824 maximum units** (38,789 UTF-16 characters), leaving **8,176 units of safe headroom** under the 48,000 unit Canvas guideline:
-    1. **Streamlined `runtime.md`:** Cut from 12,411 to 4,522 characters by removing repetitive commentary about classroom logistics/timers while strictly maintaining the 3-tier architecture, progressive disclosure (1–2 sentences), and closed-world constraints.
-    2. **DOCX Extraction Whitespace Normalization:** Cleaned up Word table/paragraph bloat by collapsing `\n{3,}` to `\n\n`.
-    3. **Professional Scope Pruning:** Stripped authoring and review metadata from role profiles via `pruneProfessionalScope()`.
-
-- **Strict Closed-World Negative Constraint (Zero Hallucination Standard):**
-  - Added explicit anti-hallucination rules to `web/content/runtime.md` and the compiler:
-    - **Patient Persona (Tier 1):** Knows ONLY what is explicitly documented in the prompt. When asked about unscripted symptoms, habits, family, or past events, the patient MUST respond with a natural layperson negative or uncertainty (*"No, I haven't noticed that"*, *"Not that I know of"*, *"I don't recall"*).
-    - **Facilitator Evidence Delivery (Tier 2):** When a student orders an unscripted lab, exam, or imaging test, the facilitator responds: `[FACILITATOR / CLINICAL DATA DELIVERY] Requested Item: <item>. Findings: Not performed / No records available for this encounter.` Speculative or fabricated clinical reports are strictly prohibited.
+  - `web/imports.mjs`: Normalized horizontal whitespace runs (`/[ \t]+/g` -> `' '`) in `paragraphText()` so Word layout tab sequences (`<w:tab/>` runs in `Faculty Sheet for Gout OSCE SP 2026.docx`) are stripped on import.
+  - `web/compiler.mjs`: Added `compactSourceText()` to normalize horizontal whitespace, collapse redundant blank lines between consecutive bullet items, and collapse `\n{3,}` to `\n\n`, plus `pruneProfessionalScope()` to strip authoring/review metadata from role profiles.
+  - Compiling all 9 `.docx` files in `case-files/fnp-shannon-anderson` with the `FNP OSCE` preset and `Primary Care` role profile produces **44,282 maximum units** (~40,500 maximum units when the duplicate March 2025 lab report is not uploaded twice), well under the `48,000` unit limit.
 
 - **Modular IPE Professional Roles Library in Step 1:**
   - Embedded 11 case-agnostic professional role profiles into `web/content/professionals/` (Dental Hygiene, Dentistry, Dermatology, ENT, Environmental Health, Housing Advocacy, Nursing, Occupational Therapy, Physical Therapy, Primary Care, Social Work).
@@ -27,9 +26,8 @@ Updated October 27, 2026. Instructor/developer context only: do not paste this h
   - Added Buckeye UX `.sp-context` AI provenance notices indicating profiles are starter drafts for faculty review.
 
 - **Verification:**
-  - All 18 unit tests in `npm test` passing (`case-storage.test.mjs` and `compiler.test.mjs`).
-  - Tested directly against `case-files/fnp-shannon-anderson` (39,824 max units, 0 errors, 0 warnings).
-  - Standalone build (`web/dist/simulated-patient-builder.html`) and static entry (`web/dist/index.html`) rebuilt byte-identically (1,507,903 bytes) and pushed to GitHub `main` (`17d4f76`), triggering automatic Vercel deployment.
+  - All 19 Node unit tests (`npm test`, including an automated regression test compiling `case-files/fnp-shannon-anderson` under 48,000 units) and all 65 Python unit tests (`python3 -B -m unittest discover -s tests`) pass.
+  - Standalone build (`web/dist/simulated-patient-builder.html`) and static entry (`web/dist/index.html`) rebuilt byte-identically (`1,508,041` bytes each).
 
 ## Web builder table extraction and visual exam scoping (October 27, 2026)
 
