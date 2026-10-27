@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "id": "fnp-telehealth-practice",
+  "version": "2026-10-22-manifest-1",
+  "status": "faculty-review-draft",
+  "case_id": "case-b-shannon-anderson",
+  "case_ref": "pipeline/cases/shannon-anderson/case.json",
+  "profession": "nursing",
+  "program": "MSN Family Nurse Practitioner",
+  "mode": "formative-practice",
+  "setting": "telehealth",
+  "learner_briefing": {
+    "source_refs": [
+      "case-files/fnp-shannon-anderson/learner-has-info/Shannon Anderson Case B Chart Snapshot.docx",
+      "case-files/fnp-shannon-anderson/learner-has-info/Shannon Anderson Case B DOOR Intake Note SP 2026.docx"
+    ],
+    "delivery": "Faculty distribute intake and chart before encounter; patient does not print them on greeting."
+  },
+  "facilitator_ref": "pipeline/activities/fnp-telehealth-practice/facilitator.json",
+  "record_catalog_ref": "cases/case-b-diagnostic-records.json",
+  "release_policy_ref": "instructions/result-release-policy.md",
+  "portrayal_ref": "packages/fnp-shannon-anderson/SKILL.md",
+  "shared_instructions_ref": "copilot-agent-instructions.md",
+  "builder_ref": "scripts/build-simulation.py",
+  "runtime_revision": "2026-10-21-copilot-pilot-7",
+  "assessment": {
+    "scoring_enabled": false,
+    "instrument_ref": null,
+    "duration_minutes": null,
+    "passing_score": null,
+    "required_submission": null,
+    "debrief_policy": null
+  },
+  "variation": {
+    "conversational": "Preserve supplied facts and existing scoped natural portrayal.",
+    "authored_variants": [],
+    "record_recall": "Patient directly provides patient-held records without recall lapse; facilitator does not step in for patient records."
+  },
+  "unresolved": [
+    "formal-course-objectives",
+    "faculty-intervention-triggers",
+    "assessment-instrument",
+    "debrief-policy",
+    "institutional-host-access",
+    "image-delivery"
+  ],
+  "deployment_status": "Shared compilation uses supplied case/activity components, approved visual fields, explicit per-format text and selected feedback/deployment inputs. No case-specific Python transformations. Unsupported scoring and intervention activation is rejected; other descriptive fields are not runtime switches.",
+  "component_bindings": {
+    "symptom-history": [
+      {
+        "scope": "activity",
+        "path": "pipeline/activities/fnp-telehealth-practice/runtime-policies/symptom-history-before.md"
+      },
+      {
+        "scope": "case",
+        "path": "pipeline/cases/shannon-anderson/runtime/clinical/symptoms.md"
+      },
+      {
+        "scope": "activity",
+        "path": "pipeline/activities/fnp-telehealth-practice/runtime-policies/symptom-history-after.md"
+      }
+    ],
+    "encounter-results": [
+      {
+        "scope": "activity",
+        "path": "pipeline/activities/fnp-telehealth-practice/runtime-policies/encounter-results-before.md"
+      },
+      {
+        "scope": "case",
+        "path": "pipeline/cases/shannon-anderson/clinical/section-07-table.md"
+      },
+      {
+        "scope": "case",
+        "path": "pipeline/cases/shannon-anderson/clinical/section-07-radiology.md"
+      },
+      {
+        "scope": "activity",
+        "path": "pipeline/activities/fnp-telehealth-practice/runtime-policies/encounter-results-after.md"
+      }
+    ]
+  },
+  "record_release_ref": "pipeline/activities/fnp-telehealth-practice/record-release.json",
+  "feedback": {
+    "guide_ref": "pipeline/activities/fnp-telehealth-practice/summary-guide.json",
+    "modes_ref": "instructions/learning-modes.md",
+    "title": "Shannon post-interaction guide"
+  },
+  "deployment": {
+    "adapter": "native-v1",
+    "bundle_dir": "packages/fnp-shannon-anderson",
+    "archive_path": "packages/fnp-shannon-anderson.zip",
+    "standalone_path": "fnp-shannon-anderson-single-file.md",
+    "standalone_title": "FNP Telehealth Encounter B \u2014 practice / OBSERVE / summary",
+    "assets": [
+      {
+        "source_ref": "assets/case-b-left-foot.jpeg",
+        "package_path": "assets/foot.jpeg"
+      }
+    ],
+    "inventory_format": "compact"
+  },
+  "standalone_instructions_ref": "pipeline/activities/fnp-telehealth-practice/runtime-policies/standalone-instructions.md"
+}

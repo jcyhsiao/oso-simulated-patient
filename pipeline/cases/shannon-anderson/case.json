@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "case-b-shannon-anderson",
+  "version": "2026-10-22-manifest-1",
+  "status": "faculty-review-draft",
+  "source_map_ref": "pipeline/cases/shannon-anderson/source-map.json",
+  "encounter_date": "2026-01-29",
+  "patient": {
+    "name": "Shannon Anderson",
+    "date_of_birth": "1961-01-01",
+    "age": 65,
+    "pronouns": "she/her/hers",
+    "given_name": "Shannon"
+  },
+  "clinical_content_ref": "cases/case-b-shannon-anderson.md",
+  "clinical_sections": [
+    "Patient symptom history with progressive disclosure",
+    "Patient history",
+    "Telehealth examination and facilitator findings",
+    "Scripted encounter results January 29 2026",
+    "Historical laboratory appendix March 4 2025"
+  ],
+  "visual_ref": "cases/case-b-visual-description.json",
+  "photo_ref": "assets/case-b-left-foot.jpeg",
+  "review_ref": "cases/case-b-author-review.md",
+  "content_boundary": "Ordered runtime components and activity bindings supply the authored case text. Format overrides are explicit inputs; metadata and approved visual fields fill declared placeholders. Historical components and the canonical clinical file are migration references, not active runtime inputs.",
+  "unresolved": [
+    "fatigue-conflict",
+    "retirement-work-stress",
+    "charted-hctz-dose",
+    "laboratory-chronology",
+    "vital-sign-dates",
+    "telehealth-findings",
+    "photo-alignment",
+    "report-and-assessment-clinical-review"
+  ],
+  "component_index_ref": "pipeline/cases/shannon-anderson/components.json",
+  "record_definitions_ref": "pipeline/cases/shannon-anderson/records.json",
+  "visual_source_document_ref": "case-files/fnp-shannon-anderson/patient-parameters-and-disclosable-info/Left Foot Image.docx"
+}

@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "source": "packages/fnp-shannon-anderson/references/case.md",
+  "source_sha256": "a48dc034b79f8e88fbf2c5334760d9d3ebc957aced396672a13c6d07fa97db49",
+  "original_source_sha256": {
+    "case-files/fnp-shannon-anderson/facilitator-observation-reference/Shannon Anderson Case B Lab 032025.docx": "8480a65d8a7b59a737d51d2210e7fad2c9cb6adf55469a3030dcc2286feb5e39",
+    "case-files/fnp-shannon-anderson/facilitator-observation-reference/Shannon Anderson Case B Lab Report 0325 Faculty Copy.docx": "ea59d6289869ee3bb0b513b51fc654d911e67368ee8e3ed78eceaed52a134bfb",
+    "case-files/fnp-shannon-anderson/learner-has-info/Shannon Anderson Case B Chart Snapshot.docx": "d1851f26d5bc3781aa4b9687fa85b2a4a5280dfccf2eae6355da01b994bbe9ef",
+    "case-files/fnp-shannon-anderson/learner-has-info/Shannon Anderson Case B DOOR Intake Note SP 2026.docx": "843a38cb3f604bfe9c1dff14e5ecc375b615d293a7b9a4cb9edf89ea4349fe20",
+    "case-files/fnp-shannon-anderson/patient-parameters-and-disclosable-info/Left Foot Image.docx": "092e22703d783c26e1bba55c24b7ee3c008032ca5ad9d6b667e70942796d2a0b",
+    "case-files/fnp-shannon-anderson/patient-parameters-and-disclosable-info/Shannon Anderson Case B Lab Interpratation During Visit.docx": "c912946b52f6f0168189b48c303671c708e73e10c4bd3aa88a2d0f365bc3429a",
+    "case-files/fnp-shannon-anderson/patient-parameters-and-disclosable-info/Teaching of SP for Gout Case B SP 2026.docx": "d717a3c439303c8838e0d7acbe596fa2663889580d99b8ff3c4bace15331e51c",
+    "case-files/fnp-shannon-anderson/patient-parameters-and-disclosable-info/The Ohio State Radiology Report Case B.docx": "25bbad870d9bfc4798267e983fd325d110c14d47f90f8782e2d87e1ff7c03f53",
+    "case-files/fnp-shannon-anderson/facilitator-observation-reference/Faculty Sheet for Gout OSCE SP 2026.docx": "c7488e6ea095bfa3d816f54714372c0cc389184766758552bf9733e4f6852598"
+  },
+  "sections": [
+    {
+      "path": "sections/00.md",
+      "heading": "preamble",
+      "roles": [
+        "faculty"
+      ],
+      "sha256": "c6461767cf8752fbc217c1369748526fe2dcceadf3da1d8e3c34febb98fdd76e"
+    },
+    {
+      "path": "sections/01.md",
+      "heading": "Configuration and source precedence",
+      "roles": [
+        "faculty"
+      ],
+      "sha256": "767c29659520ae651189e2b07b829cea55bb6ad01a3745fa28116e57a8b0cedd"
+    },
+    {
+      "path": "sections/02.md",
+      "heading": "Learner-facing briefing",
+      "roles": [
+        "faculty"
+      ],
+      "sha256": "ce2284bfa00e760469af724b7f2cdbe2f508cab479cce6a87350a8a4f6173949"
+    },
+    {
+      "path": "sections/03.md",
+      "heading": "Patient role and opening",
+      "roles": [
+        "patient"
+      ],
+      "sha256": "5c92542b906c03801b821012907f2a2d77773c04edd848c8ce642ef19dddab15"
+    },
+    {
+      "path": "sections/04.md",
+      "heading": "Patient symptom history with progressive disclosure",
+      "roles": [
+        "patient"
+      ],
+      "sha256": "86c05008afd8ab41bde4e9933aaf183aefa78874543468a6d4279c11b73ba0cd"
+    },
+    {
+      "path": "sections/05.md",
+      "heading": "Patient history",
+      "roles": [
+        "patient"
+      ],
+      "sha256": "20129f86d0602db3074553eb4f5e8fe142bd893b021fb1a852c279aaebf81cf9"
+    },
+    {
+      "path": "sections/06.md",
+      "heading": "Telehealth examination and facilitator findings",
+      "roles": [
+        "facilitator"
+      ],
+      "sha256": "17152e5a763ae71140e656f6cc86e018413e059ac226e8bbe54255190514092e"
+    },
+    {
+      "path": "sections/07.md",
+      "heading": "Prior assessment of this complaint",
+      "roles": [
+        "patient"
+      ],
+      "sha256": "34af009111b937d60674d70c33f241a8ee5d78a578cd3ba5d0966fb1bb3d5c01"
+    },
+    {
+      "path": "sections/08.md",
+      "heading": "Diagnostic record inventory",
+      "roles": [
+        "release"
+      ],
+      "sha256": "240d48cb94cdc3cd6e2b3da8da46d53b296da1a7110ce89c75eeea18bd74d0a7"
+    },
+    {
+      "path": "sections/09.md",
+      "heading": "Laboratory and radiology release rules",
+      "roles": [
+        "release"
+      ],
+      "sha256": "d428bae3cad6bb879235fdf25d2e905f930d78465502fef63526ab318f30d26e"
+    },
+    {
+      "path": "sections/10.md",
+      "heading": "Interaction flow and reactions — concealed from learner",
+      "roles": [
+        "patient"
+      ],
+      "sha256": "510fd11049ecf492cdcb3c3e8b6839738b16e9dc264e5e7f357c8196df16d713"
+    },
+    {
+      "path": "sections/11.md",
+      "heading": "Approved visual reference and symptom location",
+      "roles": [
+        "patient"
+      ],
+      "sha256": "15dd91ab5897111d7b7ac8c3e3fe5af46950b497130ef7b979fb3b79802465df"
+    },
+    {
+      "path": "sections/12.md",
+      "heading": "Packaged foot photograph and release rules",
+      "roles": [
+        "patient"
+      ],
+      "sha256": "cd2ac8cd806fdcdfe0c43dedb1f0544fe68965b85c6c942e2991880533627c9c"
+    },
+    {
+      "path": "sections/13.md",
+      "heading": "Historical laboratory appendix March 4 2025",
+      "roles": [
+        "facilitator"
+      ],
+      "sha256": "a63629c5f720566e8dc1754b580e82207f5ca18d1e8de8b28fddc2aeea8dd0f5"
+    }
+  ],
+  "outputs_sha256": {
+    "sections/00.md": "c6461767cf8752fbc217c1369748526fe2dcceadf3da1d8e3c34febb98fdd76e",
+    "sections/01.md": "767c29659520ae651189e2b07b829cea55bb6ad01a3745fa28116e57a8b0cedd",
+    "sections/02.md": "ce2284bfa00e760469af724b7f2cdbe2f508cab479cce6a87350a8a4f6173949",
+    "sections/03.md": "5c92542b906c03801b821012907f2a2d77773c04edd848c8ce642ef19dddab15",
+    "sections/04.md": "86c05008afd8ab41bde4e9933aaf183aefa78874543468a6d4279c11b73ba0cd",
+    "sections/05.md": "20129f86d0602db3074553eb4f5e8fe142bd893b021fb1a852c279aaebf81cf9",
+    "sections/06.md": "17152e5a763ae71140e656f6cc86e018413e059ac226e8bbe54255190514092e",
+    "sections/07.md": "34af009111b937d60674d70c33f241a8ee5d78a578cd3ba5d0966fb1bb3d5c01",
+    "sections/08.md": "240d48cb94cdc3cd6e2b3da8da46d53b296da1a7110ce89c75eeea18bd74d0a7",
+    "sections/09.md": "d428bae3cad6bb879235fdf25d2e905f930d78465502fef63526ab318f30d26e",
+    "sections/10.md": "510fd11049ecf492cdcb3c3e8b6839738b16e9dc264e5e7f357c8196df16d713",
+    "sections/11.md": "15dd91ab5897111d7b7ac8c3e3fe5af46950b497130ef7b979fb3b79802465df",
+    "sections/12.md": "cd2ac8cd806fdcdfe0c43dedb1f0544fe68965b85c6c942e2991880533627c9c",
+    "sections/13.md": "a63629c5f720566e8dc1754b580e82207f5ca18d1e8de8b28fddc2aeea8dd0f5",
+    "learner-briefing.md": "be7cf038c2018e61b2171f3bf3d4573f44d9b41bd59f4c4b07ae717d8140fc17",
+    "patient-reference.md": "5257cbbd1f867dc01468cb7d400419732efd8baae580e8db89e187d52f9d45d3",
+    "facilitator-reference.md": "1273ce5a71fb3fcbd37cb3cde17d2e84e44314a30957db7ac254ddc09de102a9",
+    "release-reference.md": "fd97cf3c3466f21459e132a84c8aead2aa4323e7eea8fc34c5b441a222ca4c6c",
+    "faculty-source-text.md": "f19d0f71dba0834034ea82bd5980300491208fe867b97fadd8e55b80908e1d30",
+    "faculty-reference.md": "49a0c2b62d69552e7e13cf2576e0c6566388a6d70c575f79f8daf39001690809"
+  },
+  "limitations": "Author review views, not technical role isolation or independently deployable prompts. Release reference includes patient-held report contents; facilitator retains full faculty access."
+}

@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "case_id": "case-b-shannon-anderson",
+  "activity_id": "fnp-telehealth-practice",
+  "source_ref": "case-files/fnp-shannon-anderson/facilitator-observation-reference/Faculty Sheet for Gout OSCE SP 2026.docx",
+  "status": "source-derived-formative-reference-pending-faculty-review",
+  "numeric_scoring": false,
+  "limitations": "Faculty guide is not a complete scoring instrument. NPSCA is unavailable. Clinical management expectations are source statements, not independently validated recommendations. No pass/fail or numeric score.",
+  "domains": [
+    {
+      "id": "opening",
+      "source_section": "Introduction",
+      "criteria": "Introduces self; guide also lists handwashing. Handwashing cannot be assessed through text alone."
+    },
+    {
+      "id": "history",
+      "source_section": "HOPI",
+      "criteria": "Elicits onset, location, duration, characteristics, aggravating/relieving factors, timing and severity, including sleep effect and attempted acetaminophen relief."
+    },
+    {
+      "id": "background",
+      "source_section": "PAST MEDICAL HISTORY",
+      "criteria": "Reviews medicines, allergies, medical/surgical history and health maintenance. Prior chart access alone does not establish learner review."
+    },
+    {
+      "id": "context",
+      "source_section": "FAMILY, SOCIAL and CULTURAL ASSESSMENT",
+      "criteria": "Explores relevant family/social history, lifestyle, vaccination/exposure history, mood and safety. Retain unresolved retirement/work-stress conflict; do not require invented work stress."
+    },
+    {
+      "id": "ros",
+      "source_section": "ROS",
+      "criteria": "Guide requests pertinent review of at least three systems, associated symptoms and negatives. Judge actual questions, not a count inferred from patient volunteered answers."
+    },
+    {
+      "id": "findings",
+      "source_section": "PHYSICAL EXAM",
+      "criteria": "Addresses relevant appearance, vital signs, skin/toe, heart/lungs and bilateral lower extremity findings within telehealth limits. Scripted facilitator results are not proof of an actual examination."
+    },
+    {
+      "id": "reasoning",
+      "source_section": "DIAGNOSIS / MANAGEMENT PLAN",
+      "criteria": "Guide identifies first acute gout episode and expects laboratory consideration (WBC, ESR, serum uric acid) and X-ray discussion. Accept source's explicit no-deduction treatment of ordering or not ordering joint aspiration. Distinguish reasoning explained by learner from diagnosis guessed or inferred by evaluator. Historical CBC is not a newly available current result."
+    },
+    {
+      "id": "management",
+      "source_section": "MANAGEMENT PLAN / Treatment",
+      "criteria": "Guide expects pain relief and a single acute-treatment option (NSAID, steroid or colchicine), discussion of ineffective acetaminophen and medication review including HCTZ. Guide proposes changing antihypertensive therapy and avoiding ASA; these are unvalidated source expectations requiring faculty clinical review, not automatic safety judgments. Do not reproduce dose regimens or prescribe in feedback. Topical adjunct is optional with no deduction in the source."
+    }
+  ],
+  "additional_observations": "Communication, clarification, shared understanding, follow-up and closure may be described from transcript evidence, but are not additional weighted source criteria. Patient advocacy must not reveal expected treatment. Differences from the guide are review points, not automatic clinical errors.",
+  "reviewed_source_sha256": "c7488e6ea095bfa3d816f54714372c0cc389184766758552bf9733e4f6852598"
+}

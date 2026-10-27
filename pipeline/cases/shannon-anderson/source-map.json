@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "sources": [
+    {
+      "id": "source-01",
+      "path": "case-files/fnp-shannon-anderson/facilitator-observation-reference/Shannon Anderson Case B Lab 032025.docx"
+    },
+    {
+      "id": "source-02",
+      "path": "case-files/fnp-shannon-anderson/facilitator-observation-reference/Shannon Anderson Case B Lab Report 0325 Faculty Copy.docx"
+    },
+    {
+      "id": "source-03",
+      "path": "case-files/fnp-shannon-anderson/learner-has-info/Shannon Anderson Case B Chart Snapshot.docx"
+    },
+    {
+      "id": "source-04",
+      "path": "case-files/fnp-shannon-anderson/learner-has-info/Shannon Anderson Case B DOOR Intake Note SP 2026.docx"
+    },
+    {
+      "id": "source-05",
+      "path": "case-files/fnp-shannon-anderson/patient-parameters-and-disclosable-info/Left Foot Image.docx"
+    },
+    {
+      "id": "source-06",
+      "path": "case-files/fnp-shannon-anderson/patient-parameters-and-disclosable-info/Shannon Anderson Case B Lab Interpratation During Visit.docx"
+    },
+    {
+      "id": "source-07",
+      "path": "case-files/fnp-shannon-anderson/patient-parameters-and-disclosable-info/Teaching of SP for Gout Case B SP 2026.docx"
+    },
+    {
+      "id": "source-08",
+      "path": "case-files/fnp-shannon-anderson/patient-parameters-and-disclosable-info/The Ohio State Radiology Report Case B.docx"
+    },
+    {
+      "id": "source-09",
+      "path": "case-files/fnp-shannon-anderson/facilitator-observation-reference/Faculty Sheet for Gout OSCE SP 2026.docx"
+    }
+  ],
+  "inventory_ref": "SHANNON-SOURCE-INVENTORY.md",
+  "note": "Document IDs use sorted paths, independently of the inventory S01\u2013S09 labels. Original files remain unchanged.",
+  "inventory": {
+    "directory": "case-files/fnp-shannon-anderson",
+    "patterns": [
+      "*.docx"
+    ]
+  }
+}

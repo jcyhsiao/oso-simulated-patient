@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "case_id": "case-b-shannon-anderson",
+  "activity_id": "fnp-telehealth-practice",
+  "rules": [
+    {
+      "id": "january-patient-laboratory-report",
+      "owner": "patient",
+      "release_on_firm_plan": true,
+      "availability": "Existing patient-held report. Matching requests and firm recommendations/plans/orders release only the relevant supplied tests under the case's same-visit scripted-result convention. It is not a newly completed test."
+    },
+    {
+      "id": "january-patient-foot-radiology-report",
+      "owner": "patient",
+      "release_on_firm_plan": true,
+      "availability": "Existing patient-held written report. A matching request or firm recommendation/plan/order releases it in the same response. Preserve the report date. No radiograph image exists.",
+      "disclose_on_prior_evaluation": true,
+      "prior_evaluation_topics": [
+        "foot",
+        "toe",
+        "this pain",
+        "this problem",
+        "this complaint"
+      ],
+      "prior_evaluation_context": "Current foot/toe complaint: prior-assessment questions may elicit that she has had an X-ray and holds its report, without disclosing contents until a result trigger. No prior clinician, facility, visit date, or advice is supplied."
+    },
+    {
+      "id": "march-facilitator-historical-laboratory-report",
+      "owner": "facilitator",
+      "release_on_firm_plan": false,
+      "availability": "Historical records only: complete blood count, comprehensive metabolic panel, lipid panel, hemoglobin A1C, and thyroid panel. Deliver the relevant existing record on request only if not already supplied to the learner. A new order does not turn these historical panels into current results. Not eligible for recall variation."
+    }
+  ]
+}

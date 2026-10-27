@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "case_id": "case-b-shannon-anderson",
+  "records": [
+    {
+      "id": "january-patient-laboratory-report",
+      "title": "Encounter laboratory report",
+      "date": "January 29, 2026",
+      "aliases": [
+        "lab report",
+        "blood test report",
+        "sed rate",
+        "sedimentation rate",
+        "ESR",
+        "uric acid",
+        "kidney function",
+        "renal function",
+        "creatinine",
+        "blood urea nitrogen",
+        "BUN",
+        "eGFR",
+        "albumin-to-creatinine ratio"
+      ],
+      "conflicting_terms": [],
+      "result_evidence": [
+        "sedimentation rate",
+        "ESR",
+        "uric acid",
+        "creatinine",
+        "blood urea nitrogen",
+        "BUN",
+        "eGFR",
+        "albumin-to-creatinine"
+      ],
+      "content_refs": [
+        "pipeline/cases/shannon-anderson/clinical/section-07-table.md"
+      ]
+    },
+    {
+      "id": "january-patient-foot-radiology-report",
+      "title": "Left foot X-ray written report",
+      "date": "January 29, 2026",
+      "aliases": [
+        "X-ray",
+        "X-rays",
+        "xray",
+        "xrays",
+        "radiograph",
+        "radiographs",
+        "plain film",
+        "plain films"
+      ],
+      "conflicting_terms": [
+        "right foot",
+        "chest",
+        "hand",
+        "left ankle",
+        "right ankle"
+      ],
+      "result_evidence": [
+        "negative",
+        "no signs of fracture",
+        "no signs of infection"
+      ],
+      "content_refs": [
+        "pipeline/cases/shannon-anderson/clinical/section-07-radiology.md"
+      ]
+    },
+    {
+      "id": "march-facilitator-historical-laboratory-report",
+      "title": "Historical laboratory panels",
+      "date": "March 4, 2025",
+      "aliases": [
+        "historical lab",
+        "previous blood tests",
+        "prior blood tests",
+        "complete blood count",
+        "CBC",
+        "comprehensive metabolic panel",
+        "CMP",
+        "lipid panel",
+        "cholesterol panel",
+        "A1C",
+        "thyroid panel",
+        "TSH"
+      ],
+      "conflicting_terms": [],
+      "result_evidence": [
+        "white blood cell",
+        "hemoglobin",
+        "glucose",
+        "cholesterol",
+        "A1C",
+        "TSH",
+        "free T4"
+      ],
+      "content_refs": [
+        "pipeline/cases/shannon-anderson/runtime/13.md"
+      ]
+    }
+  ]
+}

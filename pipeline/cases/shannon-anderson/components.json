@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "case_id": "case-b-shannon-anderson",
+  "components": [
+    {
+      "id": "section-00",
+      "heading": "preamble",
+      "role": "activity",
+      "path": "pipeline/cases/shannon-anderson/runtime/00.md"
+    },
+    {
+      "id": "section-01",
+      "heading": "Configuration and source precedence",
+      "role": "activity",
+      "path": "pipeline/cases/shannon-anderson/runtime/01.md",
+      "standalone": {
+        "path": "pipeline/cases/shannon-anderson/runtime/01-standalone.md",
+        "heading": "Configuration and source precedence"
+      }
+    },
+    {
+      "id": "section-02",
+      "heading": "Learner-facing briefing",
+      "role": "learner",
+      "path": "pipeline/cases/shannon-anderson/runtime/02.md"
+    },
+    {
+      "id": "section-03",
+      "heading": "Patient role and opening",
+      "role": "patient",
+      "path": "pipeline/cases/shannon-anderson/runtime/03.md"
+    },
+    {
+      "id": "section-04",
+      "heading": "Patient symptom history with progressive disclosure",
+      "role": "patient",
+      "activity_binding": "symptom-history"
+    },
+    {
+      "id": "section-05",
+      "heading": "Patient history",
+      "role": "patient",
+      "path": "pipeline/cases/shannon-anderson/runtime/05.md"
+    },
+    {
+      "id": "section-06",
+      "heading": "Telehealth examination and facilitator findings",
+      "role": "facilitator",
+      "path": "pipeline/cases/shannon-anderson/runtime/06.md"
+    },
+    {
+      "id": "section-07",
+      "heading": "Prior assessment of this complaint",
+      "role": "patient",
+      "path": "pipeline/cases/shannon-anderson/runtime/07.md"
+    },
+    {
+      "id": "section-08",
+      "heading": "Diagnostic record inventory",
+      "role": "release",
+      "path": "pipeline/cases/shannon-anderson/runtime/08.md"
+    },
+    {
+      "id": "section-09",
+      "heading": "Laboratory and radiology release rules",
+      "role": "release",
+      "activity_binding": "encounter-results"
+    },
+    {
+      "id": "section-10",
+      "heading": "Interaction flow and reactions \u2014 concealed from learner",
+      "role": "patient",
+      "path": "pipeline/cases/shannon-anderson/runtime/10.md"
+    },
+    {
+      "id": "section-11",
+      "heading": "Approved visual reference and symptom location",
+      "role": "patient",
+      "path": "pipeline/cases/shannon-anderson/runtime/11.md"
+    },
+    {
+      "id": "section-12",
+      "heading": "Packaged foot photograph and release rules",
+      "role": "patient",
+      "path": "pipeline/cases/shannon-anderson/runtime/12.md",
+      "standalone": {
+        "path": "pipeline/cases/shannon-anderson/runtime/12-standalone.md",
+        "heading": "Image request in this text-only deployment"
+      }
+    },
+    {
+      "id": "section-13",
+      "heading": "Historical laboratory appendix March 4 2025",
+      "role": "facilitator",
+      "path": "pipeline/cases/shannon-anderson/runtime/13.md"
+    }
+  ],
+  "note": "Author runtime text migrated from active components and the existing compatibility operations. No generated exports or reference views were used as inputs. See migration/README.md."
+}

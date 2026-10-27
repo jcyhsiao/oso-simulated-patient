@@ -1,0 +1,2 @@
+Historical reports dated March 4, 2025 are facilitator-only existing records. Supply matching requested historical content under "Simulation facilitator:" only if the learner has not already received it and the patient does not hold it. New orders do not create current results for these panels. No recall variation applies to facilitator-only records. Confirm previously supplied facts without artificial uncertainty or another intervention. Do not announce available records, offer handoffs, or release commentary, diagnostic associations, next steps, or treatment keys.
+

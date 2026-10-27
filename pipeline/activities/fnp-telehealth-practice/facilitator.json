@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "activity_id": "fnp-telehealth-practice",
+  "faculty_view": "Comprehensive case, learner materials, patient facts, releasable evidence, concealed faculty expectations and source review issues.",
+  "faculty_source_refs": [
+    "case-files/fnp-shannon-anderson/facilitator-observation-reference/Shannon Anderson Case B Lab 032025.docx",
+    "case-files/fnp-shannon-anderson/facilitator-observation-reference/Shannon Anderson Case B Lab Report 0325 Faculty Copy.docx",
+    "case-files/fnp-shannon-anderson/learner-has-info/Shannon Anderson Case B Chart Snapshot.docx",
+    "case-files/fnp-shannon-anderson/learner-has-info/Shannon Anderson Case B DOOR Intake Note SP 2026.docx",
+    "case-files/fnp-shannon-anderson/patient-parameters-and-disclosable-info/Left Foot Image.docx",
+    "case-files/fnp-shannon-anderson/patient-parameters-and-disclosable-info/Shannon Anderson Case B Lab Interpratation During Visit.docx",
+    "case-files/fnp-shannon-anderson/patient-parameters-and-disclosable-info/Teaching of SP for Gout Case B SP 2026.docx",
+    "case-files/fnp-shannon-anderson/patient-parameters-and-disclosable-info/The Ohio State Radiology Report Case B.docx",
+    "case-files/fnp-shannon-anderson/facilitator-observation-reference/Faculty Sheet for Gout OSCE SP 2026.docx"
+  ],
+  "releasable_information": {
+    "record_catalog_ref": "cases/case-b-diagnostic-records.json",
+    "release_policy_ref": "instructions/result-release-policy.md",
+    "examination_ref": {
+      "path": "pipeline/cases/shannon-anderson/runtime/06.md",
+      "section": "Telehealth examination and facilitator findings"
+    },
+    "rule": "Provide matching scripted information under its release conditions. Requested information delivery is separate from instructional rescue. Do not distribute the complete confidential faculty copy as a learner report."
+  },
+  "instructional_intervention": {
+    "enabled": false,
+    "rules": [],
+    "reason": "Faculty-defined dead-end and significant-departure triggers have not been supplied. Absence is not approval to invent triggers."
+  },
+  "concealed_reference": {
+    "source_ref": "case-files/fnp-shannon-anderson/facilitator-observation-reference/Faculty Sheet for Gout OSCE SP 2026.docx",
+    "use": "Faculty reference only. Expected diagnosis and management are not patient knowledge or unsolicited coaching; no automated scoring is authorized."
+  }
+}

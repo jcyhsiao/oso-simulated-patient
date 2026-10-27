@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "case",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "id",
+    "component_index_ref",
+    "record_definitions_ref"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "id": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "faculty-review-draft",
+        "approved"
+      ]
+    },
+    "source_map_ref": {
+      "type": "string"
+    },
+    "encounter_date": {
+      "type": "string"
+    },
+    "patient": {
+      "type": "object"
+    },
+    "clinical_content_ref": {
+      "type": "string"
+    },
+    "clinical_sections": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "visual_ref": {
+      "type": "string"
+    },
+    "photo_ref": {
+      "type": "string"
+    },
+    "review_ref": {
+      "type": "string"
+    },
+    "content_boundary": {
+      "type": "string"
+    },
+    "unresolved": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "component_index_ref": {
+      "type": "string"
+    },
+    "record_definitions_ref": {
+      "type": "string"
+    },
+    "visual_source_document_ref": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "case_id": "case-b-shannon-anderson",
+  "source_snapshot_ref": "cases/case-b-shannon-anderson.md",
+  "migration_source_sha256": "c5511963d564c3a01c6585869ad01b9eadd9ac134f5274993b88c75ab3a2773b",
+  "components": [
+    {
+      "id": "section-00",
+      "heading": "preamble",
+      "role": "activity",
+      "path": "pipeline/cases/shannon-anderson/components/activity/00.md"
+    },
+    {
+      "id": "section-01",
+      "heading": "Configuration and source precedence",
+      "role": "activity",
+      "path": "pipeline/cases/shannon-anderson/components/activity/01.md"
+    },
+    {
+      "id": "section-02",
+      "heading": "Learner-facing briefing",
+      "role": "learner",
+      "path": "pipeline/cases/shannon-anderson/components/learner/02.md"
+    },
+    {
+      "id": "section-03",
+      "heading": "Patient role and opening",
+      "role": "patient",
+      "path": "pipeline/cases/shannon-anderson/components/patient/03.md"
+    },
+    {
+      "id": "section-04",
+      "heading": "Patient symptom history with progressive disclosure",
+      "role": "patient",
+      "legacy_snapshot_ref": "pipeline/cases/shannon-anderson/components/patient/04.md",
+      "activity_binding": "section-04"
+    },
+    {
+      "id": "section-05",
+      "heading": "Patient history",
+      "role": "patient",
+      "path": "pipeline/cases/shannon-anderson/components/patient/05.md"
+    },
+    {
+      "id": "section-06",
+      "heading": "Telehealth examination and facilitator findings",
+      "role": "facilitator",
+      "path": "pipeline/cases/shannon-anderson/components/facilitator/06.md"
+    },
+    {
+      "id": "section-07",
+      "heading": "Laboratory and radiology release rules",
+      "role": "release",
+      "legacy_snapshot_ref": "pipeline/cases/shannon-anderson/components/release/07.md",
+      "activity_binding": "section-07"
+    },
+    {
+      "id": "section-08",
+      "heading": "Interaction flow and reactions — concealed from learner",
+      "role": "patient",
+      "path": "pipeline/cases/shannon-anderson/components/patient/08.md"
+    },
+    {
+      "id": "section-09",
+      "heading": "Foot photograph and release rules",
+      "role": "release",
+      "path": "pipeline/cases/shannon-anderson/components/release/09.md"
+    },
+    {
+      "id": "section-10",
+      "heading": "Historical laboratory appendix March 4 2025",
+      "role": "facilitator",
+      "path": "pipeline/cases/shannon-anderson/components/facilitator/10.md"
+    }
+  ],
+  "note": "Authoritative ordered pre-adapter sections. Existing documented builder transformations still apply. Roles classify sections, not technical context isolation. Snapshot is a migration reference, not an active builder input."
+}

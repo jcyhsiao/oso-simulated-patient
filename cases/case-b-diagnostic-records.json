@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "case_id": "case-b-shannon-anderson",
+  "reports": [
+    {
+      "id": "january-patient-laboratory-report",
+      "title": "Encounter laboratory report",
+      "owner": "patient",
+      "date": "January 29, 2026",
+      "release_on_firm_plan": true,
+      "availability": "Existing patient-held report. Matching requests and firm recommendations/plans/orders release only the relevant supplied tests under the case's same-visit scripted-result convention. It is not a newly completed test.",
+      "aliases": [
+        "lab report",
+        "blood test report",
+        "sed rate",
+        "sedimentation rate",
+        "ESR",
+        "uric acid",
+        "kidney function",
+        "renal function",
+        "creatinine",
+        "blood urea nitrogen",
+        "BUN",
+        "eGFR",
+        "albumin-to-creatinine ratio"
+      ],
+      "conflicting_terms": [],
+      "result_evidence": [
+        "sedimentation rate",
+        "ESR",
+        "uric acid",
+        "creatinine",
+        "blood urea nitrogen",
+        "BUN",
+        "eGFR",
+        "albumin-to-creatinine"
+      ]
+    },
+    {
+      "id": "january-patient-foot-radiology-report",
+      "title": "Left foot X-ray written report",
+      "owner": "patient",
+      "date": "January 29, 2026",
+      "release_on_firm_plan": true,
+      "availability": "Existing patient-held written report. A matching request or firm recommendation/plan/order releases it in the same response. Preserve the report date. No radiograph image exists.",
+      "aliases": [
+        "X-ray",
+        "X-rays",
+        "xray",
+        "xrays",
+        "radiograph",
+        "radiographs",
+        "plain film",
+        "plain films"
+      ],
+      "conflicting_terms": [
+        "right foot",
+        "chest",
+        "hand",
+        "left ankle",
+        "right ankle"
+      ],
+      "result_evidence": [
+        "negative",
+        "no signs of fracture",
+        "no signs of infection"
+      ],
+      "disclose_on_prior_evaluation": true,
+      "prior_evaluation_topics": [
+        "foot",
+        "toe",
+        "this pain",
+        "this problem",
+        "this complaint"
+      ],
+      "prior_evaluation_context": "Current foot/toe complaint: prior-assessment questions may elicit that she has had an X-ray and holds its report, without disclosing contents until a result trigger. No prior clinician, facility, visit date, or advice is supplied."
+    },
+    {
+      "id": "march-facilitator-historical-laboratory-report",
+      "title": "Historical laboratory panels",
+      "owner": "facilitator",
+      "date": "March 4, 2025",
+      "release_on_firm_plan": false,
+      "availability": "Historical records only: complete blood count, comprehensive metabolic panel, lipid panel, hemoglobin A1C, and thyroid panel. Deliver the relevant existing record on request only if not already supplied to the learner. A new order does not turn these historical panels into current results. Not eligible for recall variation.",
+      "aliases": [
+        "historical lab",
+        "previous blood tests",
+        "prior blood tests",
+        "complete blood count",
+        "CBC",
+        "comprehensive metabolic panel",
+        "CMP",
+        "lipid panel",
+        "cholesterol panel",
+        "A1C",
+        "thyroid panel",
+        "TSH"
+      ],
+      "conflicting_terms": [],
+      "result_evidence": [
+        "white blood cell",
+        "hemoglobin",
+        "glucose",
+        "cholesterol",
+        "A1C",
+        "TSH",
+        "free T4"
+      ]
+    }
+  ]
+}

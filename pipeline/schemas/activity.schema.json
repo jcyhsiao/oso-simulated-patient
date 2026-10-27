@@ -1,0 +1,200 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "activity",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "id",
+    "version",
+    "status",
+    "case_id",
+    "case_ref",
+    "profession",
+    "program",
+    "mode",
+    "setting",
+    "learner_briefing",
+    "facilitator_ref",
+    "record_catalog_ref",
+    "release_policy_ref",
+    "portrayal_ref",
+    "shared_instructions_ref",
+    "builder_ref",
+    "runtime_revision",
+    "assessment",
+    "variation",
+    "unresolved",
+    "deployment_status",
+    "component_bindings",
+    "record_release_ref",
+    "feedback",
+    "deployment"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "id": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "faculty-review-draft",
+        "approved"
+      ]
+    },
+    "case_id": {
+      "type": "string"
+    },
+    "case_ref": {
+      "type": "string"
+    },
+    "profession": {
+      "type": "string"
+    },
+    "program": {
+      "type": "string"
+    },
+    "mode": {
+      "type": "string"
+    },
+    "setting": {
+      "type": "string"
+    },
+    "learner_briefing": {
+      "type": "object"
+    },
+    "facilitator_ref": {
+      "type": "string"
+    },
+    "record_catalog_ref": {
+      "type": "string"
+    },
+    "release_policy_ref": {
+      "type": "string"
+    },
+    "portrayal_ref": {
+      "type": "string"
+    },
+    "shared_instructions_ref": {
+      "type": "string"
+    },
+    "builder_ref": {
+      "type": "string"
+    },
+    "runtime_revision": {
+      "type": "string"
+    },
+    "assessment": {
+      "type": "object"
+    },
+    "variation": {
+      "type": "object"
+    },
+    "unresolved": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "deployment_status": {
+      "type": "string"
+    },
+    "component_bindings": {
+      "type": "object"
+    },
+    "record_release_ref": {
+      "type": "string"
+    },
+    "feedback": {
+      "type": "object",
+      "required": [
+        "guide_ref",
+        "modes_ref",
+        "title"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "guide_ref": {
+          "type": "string"
+        },
+        "modes_ref": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      }
+    },
+    "deployment": {
+      "type": "object",
+      "required": [
+        "adapter",
+        "bundle_dir",
+        "archive_path",
+        "standalone_path",
+        "standalone_title",
+        "assets"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "adapter": {
+          "type": "string",
+          "enum": [
+            "native-v1"
+          ]
+        },
+        "bundle_dir": {
+          "type": "string"
+        },
+        "archive_path": {
+          "type": "string"
+        },
+        "standalone_path": {
+          "type": "string"
+        },
+        "standalone_title": {
+          "type": "string"
+        },
+        "assets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "source_ref",
+              "package_path"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "source_ref": {
+                "type": "string"
+              },
+              "package_path": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "inventory_format": {
+          "type": "string",
+          "enum": [
+            "compact",
+            "explicit"
+          ]
+        },
+        "base_instructions_path": {
+          "type": "string"
+        }
+      }
+    },
+    "standalone_instructions_ref": {
+      "type": "string"
+    }
+  }
+}
