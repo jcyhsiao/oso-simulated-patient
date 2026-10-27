@@ -28,14 +28,14 @@ function fixture() {
   };
 }
 
-test('canvas direct export produces ready-to-paste instructions and enforces under-48,000 unit budget', () => {
+test('carmen direct export produces ready-to-paste instructions and enforces under-48,000 unit budget', () => {
   const model = fixture();
   model.groups.context.text = 'Course example: a different patient.';
   model.groups['learner-has-info'].text = 'Learner already knows the color.';
   const result = compileEncounter(model, content);
   assert.deepEqual(result.errors, []);
   assert.equal(result.files.length, 1);
-  assert.equal(result.files[0].name, 'example-person-canvas-instructions.md');
+  assert.equal(result.files[0].name, 'example-person-carmen-instructions.md');
   assert.ok(result.instructionCounts.maximum < 48000);
   assert.match(result.directInstructions, /# Example person — Simulated Patient Instructions/);
   assert.match(result.directInstructions, /STRICT CLOSED-WORLD GROUNDING/);

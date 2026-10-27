@@ -182,14 +182,14 @@ END INLINE CASE
   const targetLimit = 48000;
 
   if (instructionCounts.maximum >= targetLimit) {
-    errors.push(`Compiled instructions (${instructionCounts.maximum.toLocaleString()} maximum units) exceed the under-48,000 unit budget for Canvas AI Assistant. Trim duplicate attachments or lengthy grading excerpts; no content was removed automatically.`);
+    errors.push(`Compiled instructions (${instructionCounts.maximum.toLocaleString()} maximum units) exceed the under-48,000 unit budget for Carmen AI Assistant. Trim duplicate attachments or lengthy grading excerpts; no content was removed automatically.`);
     return { errors, warnings, files: [], instructionCounts };
   }
 
-  const manifest = { schema_version: 1, builder_version: content.version, case_name: name, learner_role: role, participating_roles: activeRoles.map(r => ({ id: r.id, title: r.title.trim(), isCustom: Boolean(r.isCustom) })), export_format: 'canvas-direct', feedback: { preset: feedback.usePreset ? model.preset : null, preset_version: feedback.usePreset ? model.presetSnapshot?.version || content.version : null, custom: feedback.custom, composition: feedback.custom ? feedback.usePreset ? 'supplement' : 'custom-only' : null }, counts: instructionCounts, sources: Object.fromEntries(Object.entries(model.groups).map(([key, group]) => [key, includedSources(group).map(s => s.label)])), assets: assetFiles.map(a => a.path) };
+  const manifest = { schema_version: 1, builder_version: content.version, case_name: name, learner_role: role, participating_roles: activeRoles.map(r => ({ id: r.id, title: r.title.trim(), isCustom: Boolean(r.isCustom) })), export_format: 'carmen', feedback: { preset: feedback.usePreset ? model.preset : null, preset_version: feedback.usePreset ? model.presetSnapshot?.version || content.version : null, custom: feedback.custom, composition: feedback.custom ? feedback.usePreset ? 'supplement' : 'custom-only' : null }, counts: instructionCounts, sources: Object.fromEntries(Object.entries(model.groups).map(([key, group]) => [key, includedSources(group).map(s => s.label)])), assets: assetFiles.map(a => a.path) };
 
   const files = [
-    { name: `${slug}-canvas-instructions.md`, data: directInstructions, type: 'text/markdown;charset=utf-8' }
+    { name: `${slug}-carmen-instructions.md`, data: directInstructions, type: 'text/markdown;charset=utf-8' }
   ];
 
   return { errors, warnings, files, directInstructions, instructionCounts, manifest, caseText, feedbackText, feedbackLabel: feedback.label };

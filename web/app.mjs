@@ -132,7 +132,7 @@ function model() {
   return { name: byId('case-name').value, role: byId('learner-role').value, description: byId('case-description').value,
     groups, preset: byId('feedback-preset').value, presetSnapshot,
     composition: document.querySelector('input[name=composition]:checked')?.value || '',
-    format: 'canvas-direct',
+    format: 'carmen',
     roles: roles.map(r => ({ ...r })) };
 }
 function selectionLabel(current) {
@@ -144,7 +144,7 @@ function update() {
   byId('summary-name').textContent = current.name.trim() || 'Not entered';
   byId('summary-role').textContent = current.role.trim() || 'Not entered';
   byId('summary-feedback').textContent = selectionLabel(current); byId('feedback-included').textContent = selectionLabel(current);
-  byId('summary-format').textContent = 'Canvas AI Assistant';
+  byId('summary-format').textContent = 'Carmen AI Assistant';
   byId('feedback-composition').hidden = !(custom && current.preset !== 'none');
   const preset = current.presetSnapshot || APP_CONTENT.presets[current.preset];
   byId('update-preset').hidden = !preset || preset.text === APP_CONTENT.presets[current.preset]?.text;
@@ -304,7 +304,7 @@ function buildPackage() {
     byId('build-result').hidden = false;
     if (byId('copy-instructions')) byId('copy-instructions').hidden = false;
     if (byId('download-instructions')) byId('download-instructions').hidden = false;
-    byId('build-status').textContent = 'Instructions compiled! Click "Copy instructions to clipboard" below, then paste directly into Canvas AI Assistant.';
+    byId('build-status').textContent = 'Instructions compiled! Click "Copy instructions to clipboard" below, then paste directly into Carmen AI Assistant.';
   } catch (error) { byId('build-errors').textContent = `Could not compile instructions: ${error.message}`; byId('build-errors').hidden = false; revoked(); }
 }
 for (const button of document.querySelectorAll('[data-step]')) button.addEventListener('click', () => showStep(Number(button.dataset.step), true));
@@ -319,7 +319,7 @@ byId('copy-instructions')?.addEventListener('click', async () => {
   const text = byId('generated-preview').textContent;
   try {
     await navigator.clipboard.writeText(text);
-    byId('build-status').textContent = 'Copied instructions to clipboard! Paste directly into Canvas AI Assistant.';
+    byId('build-status').textContent = 'Copied instructions to clipboard! Paste directly into Carmen AI Assistant.';
   } catch {
     byId('build-status').textContent = 'Clipboard access denied. Select all text in the preview below and copy manually.';
   }
@@ -332,7 +332,7 @@ byId('download-instructions')?.addEventListener('click', () => {
   urls.push(url);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${slugify(name)}-canvas-instructions.md`;
+  a.download = `${slugify(name)}-carmen-instructions.md`;
   a.click();
   byId('build-status').textContent = 'Download started.';
 });

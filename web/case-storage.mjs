@@ -23,8 +23,9 @@ function caseImage(image) {
     excluded: Boolean(image.excluded), reviewOpen: Boolean(image.reviewOpen), warning: caseString(image.warning || '') };
 }
 export function cleanCaseModel(model) {
-  const format = model?.format || 'canvas-direct';
-  if (!model || !['none', 'fnp', 'ipe'].includes(model.preset) || !['canvas-direct', 'synthesis', 'single', 'skills'].includes(format) || !['', 'supplement', 'replace'].includes(model.composition)) throw new Error('Invalid case settings.');
+  const rawFormat = model?.format || 'carmen';
+  if (!model || !['none', 'fnp', 'ipe'].includes(model.preset) || !['carmen', 'canvas-direct', 'synthesis', 'single', 'skills'].includes(rawFormat) || !['', 'supplement', 'replace'].includes(model.composition)) throw new Error('Invalid case settings.');
+  const format = 'carmen';
   const groups = Object.fromEntries(CASE_GROUP_KEYS.map(key => {
     const group = model.groups?.[key];
     if (!group || !Array.isArray(group.files)) throw new Error('Missing case input group.');
@@ -55,7 +56,7 @@ export function normalizeCaseSnapshot(snapshot) {
     created_at: snapshot.created_at, saved_at: snapshot.saved_at, model: cleanCaseModel(snapshot.model), view: { step: view.step, area: view.area } };
 }
 export function caseHasWork(model) {
-  return Boolean(model.name || model.role || model.description || model.preset !== 'none' || model.format !== 'single' || model.composition || (model.roles && model.roles.some(r => r.active || r.isCustom)) || Object.values(model.groups).some(g => g.text || g.files.length));
+  return Boolean(model.name || model.role || model.description || model.preset !== 'none' || model.composition || (model.roles && model.roles.some(r => r.active || r.isCustom)) || Object.values(model.groups).some(g => g.text || g.files.length));
 }
 export function caseConflict(message = 'This case changed in another tab. Open the latest copy or save your work as a separate case.') { const error = new Error(message); error.name = 'CaseConflictError'; return error; }
 export async function openCaseStorage(factory = globalThis.indexedDB) {
