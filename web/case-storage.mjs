@@ -23,7 +23,8 @@ function caseImage(image) {
     excluded: Boolean(image.excluded), reviewOpen: Boolean(image.reviewOpen), warning: caseString(image.warning || '') };
 }
 export function cleanCaseModel(model) {
-  if (!model || !['none', 'fnp', 'ipe'].includes(model.preset) || !['single', 'skills'].includes(model.format) || !['', 'supplement', 'replace'].includes(model.composition)) throw new Error('Invalid case settings.');
+  const format = model?.format || 'synthesis';
+  if (!model || !['none', 'fnp', 'ipe'].includes(model.preset) || !['synthesis', 'single', 'skills'].includes(format) || !['', 'supplement', 'replace'].includes(model.composition)) throw new Error('Invalid case settings.');
   const groups = Object.fromEntries(CASE_GROUP_KEYS.map(key => {
     const group = model.groups?.[key];
     if (!group || !Array.isArray(group.files)) throw new Error('Missing case input group.');
@@ -43,7 +44,7 @@ export function cleanCaseModel(model) {
     presetSnapshot = { key: preset.key, title: caseString(preset.title), text: caseString(preset.text), description: caseString(preset.description || ''), version: caseString(preset.version) };
   }
   const roles = Array.isArray(model.roles) ? model.roles.map(caseRole) : [];
-  return { name: caseString(model.name), role: caseString(model.role), description: caseString(model.description), groups, preset: model.preset, presetSnapshot, composition: model.composition, format: model.format, roles };
+  return { name: caseString(model.name), role: caseString(model.role), description: caseString(model.description), groups, preset: model.preset, presetSnapshot, composition: model.composition, format, roles };
 }
 export function normalizeCaseSnapshot(snapshot) {
   if (!snapshot || snapshot.schema_version !== 1) throw new Error('Unsupported case version. Keep a backup and open it with a compatible builder.');

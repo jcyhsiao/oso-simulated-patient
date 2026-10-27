@@ -123,14 +123,16 @@ function renderRoles() {
 const revoked = () => { for (const url of urls) URL.revokeObjectURL(url); urls = []; };
 function invalidate() {
   revision++; revoked(); byId('build-result').hidden = true; byId('build-errors').hidden = true;
-  byId('downloads').replaceChildren(); byId('build-status').textContent = '';
+  if (byId('copy-synthesis')) byId('copy-synthesis').hidden = true;
+  if (byId('download-synthesis')) byId('download-synthesis').hidden = true;
+  byId('build-status').textContent = '';
 }
 function model() {
   for (const [key, refs] of groupElements) groups[key].text = refs.text.value;
   return { name: byId('case-name').value, role: byId('learner-role').value, description: byId('case-description').value,
     groups, preset: byId('feedback-preset').value, presetSnapshot,
     composition: document.querySelector('input[name=composition]:checked')?.value || '',
-    format: document.querySelector('input[name=format]:checked').value,
+    format: 'synthesis',
     roles: roles.map(r => ({ ...r })) };
 }
 function selectionLabel(current) {
@@ -142,7 +144,7 @@ function update() {
   byId('summary-name').textContent = current.name.trim() || 'Not entered';
   byId('summary-role').textContent = current.role.trim() || 'Not entered';
   byId('summary-feedback').textContent = selectionLabel(current); byId('feedback-included').textContent = selectionLabel(current);
-  byId('summary-format').textContent = current.format === 'single' ? 'Single instruction file' : 'Instructions + case skill ZIP';
+  byId('summary-format').textContent = 'Canvas AI Assistant';
   byId('feedback-composition').hidden = !(custom && current.preset !== 'none');
   const preset = current.presetSnapshot || APP_CONTENT.presets[current.preset];
   byId('update-preset').hidden = !preset || preset.text === APP_CONTENT.presets[current.preset]?.text;
@@ -285,21 +287,15 @@ function buildPackage() {
     box.setAttribute('tabindex', '-1'); box.focus(); return;
   }
   try {
-    const output = result.files.map(file => ({ ...file, blob: new Blob([file.members ? createZip(file.members) : file.data], { type: file.type }) }));
     if (revision !== currentRevision) return;
-    const counts = byId('output-counts'); counts.replaceChildren();
-    for (const check of result.checks) counts.append(element('p', `${check.label}: ${check.counts.utf16.toLocaleString()} UTF-16; ${check.counts.crlf.toLocaleString()} with CRLF; ${check.counts.utf8.toLocaleString()} UTF-8 bytes. Required: all below ${check.limit.toLocaleString()}.`, 'sp-counts'));
     const warnings = byId('build-warnings'); warnings.replaceChildren();
     if (result.warnings.length) { warnings.append(element('h3', 'Build notes')); const list = element('ul'); result.warnings.forEach(note => list.append(element('li', note))); warnings.append(list); }
-    const downloads = byId('downloads'); downloads.replaceChildren();
-    for (const file of output) {
-      const row = element('div', undefined, 'sp-output'), title = element('span', file.name); const link = element('a', 'Download', 'sp-button');
-      const url = URL.createObjectURL(file.blob); urls.push(url); link.href = url; link.download = file.name;
-      link.addEventListener('click', () => { byId('build-status').textContent = `Download requested: ${file.name}`; }); row.append(title, link); downloads.append(row);
-    }
-    const preview = output.filter(file => typeof file.data === 'string').map(file => `FILE: ${file.name}\n\n${file.data}`).join('\n\n') + (model().format === 'skills' ? '\n\nCASE REFERENCE\n\n' + result.caseText + '\n\nFEEDBACK REFERENCE\n\n' + result.feedbackText : '');
-    byId('generated-preview').textContent = preview; byId('build-result').hidden = false; byId('build-status').textContent = 'Package built locally. Choose a download below.';
-  } catch (error) { byId('build-errors').textContent = `Could not package output: ${error.message}`; byId('build-errors').hidden = false; revoked(); }
+    byId('generated-preview').textContent = result.synthesisPrompt;
+    byId('build-result').hidden = false;
+    if (byId('copy-synthesis')) byId('copy-synthesis').hidden = false;
+    if (byId('download-synthesis')) byId('download-synthesis').hidden = false;
+    byId('build-status').textContent = 'Synthesis prompt ready! Click "Copy prompt to clipboard" below.';
+  } catch (error) { byId('build-errors').textContent = `Could not generate prompt: ${error.message}`; byId('build-errors').hidden = false; revoked(); }
 }
 for (const button of document.querySelectorAll('[data-step]')) button.addEventListener('click', () => showStep(Number(button.dataset.step), true));
 for (const button of document.querySelectorAll('[data-area]')) button.addEventListener('click', () => showArea(button.dataset.area));
@@ -307,8 +303,30 @@ byId('next').addEventListener('click', () => showStep(activeStep + 1, true)); by
 for (const id of ['case-name', 'learner-role', 'case-description']) byId(id).addEventListener('input', update);
 function chooseCurrentPreset() { const key = byId('feedback-preset').value; presetSnapshot = key === 'none' ? null : { ...APP_CONTENT.presets[key], key, version: APP_CONTENT.version }; update(); }
 byId('feedback-preset').addEventListener('change', chooseCurrentPreset);
-byId('update-preset').addEventListener('click', chooseCurrentPreset); document.querySelectorAll('input[name=composition],input[name=format]').forEach(input => input.addEventListener('change', update));
-byId('build').addEventListener('click', buildPackage); window.addEventListener('pagehide', () => { revoked(); for (const key of previewUrls.keys()) revokePreviews(key); });
+byId('update-preset').addEventListener('click', chooseCurrentPreset); document.querySelectorAll('input[name=composition]').forEach(input => input.addEventListener('change', update));
+byId('build').addEventListener('click', buildPackage);
+byId('copy-synthesis')?.addEventListener('click', async () => {
+  const text = byId('generated-preview').textContent;
+  try {
+    await navigator.clipboard.writeText(text);
+    byId('build-status').textContent = 'Copied prompt to clipboard! Paste into OSU Gemini or Microsoft Copilot.';
+  } catch {
+    byId('build-status').textContent = 'Clipboard access denied. Select all text in the preview below and copy manually.';
+  }
+});
+byId('download-synthesis')?.addEventListener('click', () => {
+  const text = byId('generated-preview').textContent;
+  const name = byId('case-name').value.trim() || 'simulated-patient';
+  const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  urls.push(url);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${slugify(name)}-synthesis-prompt.md`;
+  a.click();
+  byId('build-status').textContent = 'Download started.';
+});
+window.addEventListener('pagehide', () => { revoked(); for (const key of previewUrls.keys()) revokePreviews(key); });
 window.addEventListener('pageshow', event => { if (event.persisted) { for (const key of groupElements.keys()) renderFiles(key); update(); } });
 byId('add-custom-role-btn')?.addEventListener('click', () => {
   byId('custom-role-form').hidden = false;
@@ -354,7 +372,6 @@ caseSession = setupCaseSession({
     for (const [key, refs] of groupElements) { groups[key] = state ? state.groups[key] : { text: '', files: [] }; refs.text.value = groups[key].text; refs.file.value = ''; renderFiles(key); }
     presetSnapshot = state?.presetSnapshot || null; byId('feedback-preset').value = state?.preset || 'none';
     for (const input of document.querySelectorAll('input[name=composition]')) input.checked = input.value === state?.composition;
-    for (const input of document.querySelectorAll('input[name=format]')) input.checked = input.value === (state?.format || 'single');
     showStep(record?.view.step ?? 0); showArea(record?.view.area || AREA_KEYS[0]); update();
   },
   lock: locked => { document.querySelector('.sp-workspace').inert = locked; document.querySelector('.sp-steps').inert = locked; for (const button of document.querySelectorAll('#case-toolbar button')) button.disabled = locked; },

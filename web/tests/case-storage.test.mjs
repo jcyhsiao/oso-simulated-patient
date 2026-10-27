@@ -5,7 +5,7 @@ import { compileEncounter } from '../compiler.mjs';
 import { createZip } from '../zip.mjs';
 function caseFixture() {
   return { schema_version: 1, builder_version: 'test', id: 'original', revision: 3, created_at: '2026-10-27T12:00:00Z', saved_at: '2026-10-27T13:00:00Z', view: { step: 2, area: 'patient-parameters-and-disclosable-info' }, model: {
-    name: 'Case 🦷', role: 'Learner', description: 'Optional\ncontext', preset: 'fnp', presetSnapshot: { key: 'fnp', title: 'Pinned preset', text: 'ORIGINAL PRESET', description: 'Original', version: 'old' }, composition: 'supplement', format: 'skills',
+    name: 'Case 🦷', role: 'Learner', description: 'Optional\ncontext', preset: 'fnp', presetSnapshot: { key: 'fnp', title: 'Pinned preset', text: 'ORIGINAL PRESET', description: 'Original', version: 'old' }, composition: 'supplement', format: 'synthesis',
     roles: [
       { id: 'dh', title: 'Dental Hygiene', text: 'DH scope', isCustom: false, active: true },
       { id: 'custom-fnp', title: 'Graduate student in the FNP program', text: 'FNP scope', isCustom: true, active: false }
