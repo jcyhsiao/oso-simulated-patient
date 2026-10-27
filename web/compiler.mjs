@@ -78,7 +78,6 @@ export function feedbackChoice(model, content) {
   return { custom, usePreset, enabled: usePreset || custom,
     label: usePreset ? `${selectedCasePreset(model, content).title}${custom ? ' + faculty criteria' : ''}` : custom ? 'Faculty-provided criteria only' : 'No preliminary feedback' };
 }
-}
 
 export function compileEncounter(model, content) {
   const errors = [], warnings = [];

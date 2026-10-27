@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-4uIT1DEWQoKoSG8VD0iwY+KEhSMdCgDNoiItpGDV0R8='; style-src 'unsafe-inline'; font-src data:; img-src data: blob:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-CCwTXLSbQ8AiRY5zUzap+/HyG3ebUCgAveIdgKZuv0U='; style-src 'unsafe-inline'; font-src data:; img-src data: blob:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="description" content="Package faculty-prepared materials for a simulated patient encounter. Files are processed locally in your browser.">
 <title>Simulated Patient Builder</title>
 <style>/*!
@@ -868,7 +868,6 @@ function feedbackChoice(model, content) {
   const usePreset = selected !== 'none' && !(custom && model.composition === 'replace');
   return { custom, usePreset, enabled: usePreset || custom,
     label: usePreset ? `${selectedCasePreset(model, content).title}${custom ? ' + faculty criteria' : ''}` : custom ? 'Faculty-provided criteria only' : 'No preliminary feedback' };
-}
 }
 
 function compileEncounter(model, content) {

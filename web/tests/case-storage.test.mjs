@@ -45,3 +45,21 @@ test('case backups reject missing assets, unexpected files, invalid settings and
   const valid = caseFixture(); valid.model.format = 'execute';
   assert.throws(() => normalizeCaseSnapshot(valid), /Invalid case settings/);
 });
+
+test('legacy format values normalize to carmen and blank model has no work', () => {
+  for (const legacy of ['canvas-direct', 'synthesis', 'single', 'skills']) {
+    const model = caseFixture().model;
+    model.format = legacy;
+    const cleaned = cleanCaseModel(model);
+    assert.equal(cleaned.format, 'carmen');
+  }
+
+  const blank = {
+    name: '', role: '', description: '', preset: 'none', composition: '', format: 'carmen', unlistedSymptoms: 'neutral',
+    roles: [{ id: 'dh', active: false, isCustom: false }],
+    groups: Object.fromEntries(CASE_GROUP_KEYS.map(key => [key, { text: '', files: [] }]))
+  };
+  assert.equal(caseHasWork(blank), false);
+  blank.name = 'Touched';
+  assert.equal(caseHasWork(blank), true);
+});

@@ -1,5 +1,12 @@
 /* Optional browser QA: PLAYWRIGHT_MODULE and BROWSER_EXECUTABLE can point to an existing installation. */
-const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+let chromium;
+try {
+  ({ chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright'));
+} catch (e) {
+  console.error('Playwright is not installed. Set PLAYWRIGHT_MODULE=<path> or install playwright to run browser QA.');
+  process.exit(1);
+}
+
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
@@ -17,6 +24,18 @@ const { spawnSync } = require('node:child_process');
   await page.keyboard.press('Enter');
   if (!(await page.locator('#main-content').evaluate(el => el === document.activeElement))) throw Error('Skip link did not focus main content');
   await page.locator('#case-name').fill('Linda Johnson'); await page.locator('#learner-role').fill('Dental hygiene student');
+
+  // WS5: selecting a role chip does not overwrite the developer-entered learner role
+  const dhChip = page.locator('.sp-role-chip').filter({ hasText: 'Dental Hygiene' });
+  if (await dhChip.count()) {
+    await dhChip.click();
+    if ((await page.locator('#learner-role').inputValue()) !== 'Dental hygiene student') throw Error('Role chip overwrote learner role');
+  }
+
+  // WS2: unlisted symptoms defaults to neutral
+  if (!(await page.locator('input[name=unlisted-symptoms][value=neutral]').isChecked())) throw Error('Default unlisted symptoms should be neutral');
+  await page.locator('input[name=unlisted-symptoms][value=deny]').check();
+
   await page.locator('#text-context').fill('Course context: prepare for the later human IPE group discussion.');
   await page.locator('[data-step="1"]').click(); await page.locator('[data-area="patient-parameters-and-disclosable-info"]').click();
   await page.locator('#text-patient-parameters-and-disclosable-info').fill('Linda is 67. Reveal supplied information gradually. When asked about oral health: “My gums bleed when I brush.” Missing facts remain unspecified.');
@@ -69,20 +88,22 @@ const { spawnSync } = require('node:child_process');
   await page.locator('[data-step="2"]').click(); await page.locator('input[name=composition][value=supplement]').check();
   await page.screenshot({ path: path.join(out, 'feedback-desktop.png'), fullPage: true });
   await page.locator('[data-step="3"]').click(); await page.locator('#build').click(); await page.locator('#build-result').waitFor({ state: 'visible' });
-  let downloadEvent = page.waitForEvent('download'); await page.locator('#downloads a').first().click(); let download = await downloadEvent;
+
+  let downloadEvent = page.waitForEvent('download'); await page.locator('#download-instructions').click(); let download = await downloadEvent;
   const single = path.join(out, download.suggestedFilename()); await download.saveAs(single);
+  if (!download.suggestedFilename().endsWith('-carmen-instructions.md')) throw Error('Filename must end with -carmen-instructions.md');
   const text = await fs.readFile(single, 'utf8');
-  if (!text.includes('Assessment timing is managed by a human assessor or timekeeper') || !text.includes('Discovery and result delivery are distinct')) throw Error('New shared runtime policy missing from downloaded export'); if (!text.includes('9.2%') || !text.includes('Buckeye IPE preliminary feedback') || !text.includes('human IPE group discussion')) throw Error('Single export missing supplied inputs');
-  await page.locator('input[name=format][value=skills]').check(); if (await page.locator('#build-result').isVisible()) throw Error('Stale export was not invalidated');
-  await page.locator('#build').click(); downloadEvent = page.waitForEvent('download'); await page.locator('#downloads a').nth(1).click(); download = await downloadEvent;
-  const archive = path.join(out, download.suggestedFilename()); await download.saveAs(archive);
-  const checked = spawnSync('python3', ['-B', '-c', 'import sys,zipfile;z=zipfile.ZipFile(sys.argv[1]);assert z.testzip() is None;assert set(z.namelist())=={"SKILL.md","references/case.md","references/feedback.md","build-manifest.json","assets/01-sample.png"};assert z.read("assets/01-sample.png")==open(sys.argv[2],"rb").read();assert b"152/92" in z.read("references/case.md")', archive, path.join(out, 'sample.png')], { encoding: 'utf8' }); if (checked.status) throw Error(checked.stderr);
+  if (!text.includes('Assessment timing is managed by a human assessor or timekeeper') || !text.includes('Discovery and result delivery are distinct')) throw Error('New shared runtime policy missing from downloaded export');
+  if (!text.includes('9.2%') || !text.includes('Buckeye IPE preliminary feedback') || !text.includes('human IPE group discussion')) throw Error('Export missing supplied inputs');
+  if (!text.includes('Faculty policy for this case: if the learner asks about a symptom')) throw Error('Deny policy missing from export');
+
   await page.locator('[data-step="2"]').click(); await page.locator('input[name=composition][value=replace]').check();
   await page.locator('[data-step="3"]').click(); await page.locator('#build').click();
   if ((await page.locator('#generated-preview').textContent()).includes('# Buckeye IPE preliminary feedback framework')) throw Error('Replacement left preset in export');
   await page.locator('[data-step="0"]').click(); await page.locator('#text-context').fill('X'.repeat(51000));
-  await page.locator('[data-step="3"]').click(); await page.locator('input[name=format][value=single]').check(); await page.locator('#build').click();
-  await page.getByText(/exceeds the under-50,000/).waitFor(); if (await page.locator('#downloads a').count()) throw Error('Oversized export has downloads');
+  await page.locator('[data-step="3"]').click(); await page.locator('#build').click();
+  await page.getByText(/exceeds the under-48,000/).waitFor();
+  if (await page.locator('#download-instructions').isVisible()) throw Error('Oversized export has downloads');
   await page.locator('[data-step="0"]').click(); await page.locator('#text-context').fill('Course context, not patient facts.');
   await page.locator('[data-step="2"]').click(); await page.locator('#feedback-preset').selectOption('none'); await page.locator('#text-feedback').fill('');
   await page.locator('[data-step="3"]').click(); await page.locator('#build').click();
@@ -93,8 +114,10 @@ const { spawnSync } = require('node:child_process');
   await page.setViewportSize({ width: 360, height: 1000 });
   if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)) throw Error('Mobile horizontal overflow');
   await page.screenshot({ path: path.join(out, 'export-mobile.png'), fullPage: true });
-  await page.locator('#case-save').click(); await page.getByText(/Saved on this device/).waitFor(); await page.reload(); await page.locator('#case-save:enabled').waitFor(); if ((await page.locator('#case-name').inputValue()) !== 'Linda Johnson') throw Error('Case state not restored after reload');
+  await page.locator('#case-save').click(); await page.getByText(/Saved on this device/).waitFor(); await page.reload(); await page.locator('#case-save:enabled').waitFor();
+  if ((await page.locator('#case-name').inputValue()) !== 'Linda Johnson') throw Error('Case state not restored after reload');
+  if (!(await page.locator('input[name=unlisted-symptoms][value=deny]').isChecked())) throw Error('Unlisted symptoms deny setting not restored after reload');
   if (connections.length || errors.length) throw Error(JSON.stringify({ connections, errors }));
-  console.log(JSON.stringify({ mode: process.env.BUILDER_URL ? 'static HTTP' : 'direct HTML, offline', checked: 'DOCX paragraphs/tables and sample, safe text, file ordering/removal, custom composition, actual MD/ZIP downloads, overflow, no feedback, save/resume, BUX fonts, mobile layout, no content network traffic', screenshots: out }));
+  console.log(JSON.stringify({ mode: process.env.BUILDER_URL ? 'static HTTP' : 'direct HTML, offline', checked: 'DOCX paragraphs/tables and sample, safe text, file ordering/removal, custom composition, actual Carmen instructions download, overflow, no feedback, save/resume, BUX fonts, mobile layout, no content network traffic', screenshots: out }));
   await browser.close();
 })().catch(error => { console.error(error); process.exitCode = 1; });

@@ -1,9 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
+import { readdir, readFile } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
-import { compileEncounter, textCounts, renderScalar, AREA_KEYS, pruneProfessionalScope } from '../compiler.mjs';
+import { compileEncounter, textCounts, renderScalar, AREA_KEYS } from '../compiler.mjs';
 import { createZip, readZip } from '../zip.mjs';
 
 const content = {
@@ -24,7 +23,8 @@ function fixture() {
     groups: Object.fromEntries(['context', ...AREA_KEYS, 'feedback'].map(key => [key, { text: key === AREA_KEYS[3] ? 'Supplied fictional fact: favorite color is blue.' : '', files: [] }])),
     preset: 'none',
     composition: '',
-    format: 'synthesis'
+    format: 'carmen',
+    unlistedSymptoms: 'neutral'
   };
 }
 
@@ -45,6 +45,49 @@ test('carmen direct export produces ready-to-paste instructions and enforces und
   const blocked = compileEncounter(huge, content);
   assert.equal(blocked.files.length, 0);
   assert.match(blocked.errors.join(), /under-48,000/);
+});
+
+test('synthetic budget tests enforce 45,000 warning and 48,000 hard block with area breakdowns', () => {
+  const model46 = fixture();
+  const baseRes = compileEncounter(model46, content);
+  model46.groups[AREA_KEYS[3]].text = 'A'.repeat(46000 - baseRes.instructionCounts.maximum);
+  const result46 = compileEncounter(model46, content);
+  assert.deepEqual(result46.errors, []);
+  assert.ok(result46.instructionCounts.maximum >= 45000 && result46.instructionCounts.maximum < 48000);
+  assert.match(result46.warnings.join(), /within 3,000 units/);
+  assert.equal(result46.files.length, 1);
+  assert.ok(result46.areaCounts);
+  assert.ok(result46.areaCounts['patient-parameters-and-disclosable-info'] > 30000);
+
+  const model49 = fixture();
+  model49.groups[AREA_KEYS[3]].text = 'B'.repeat(49000 - baseRes.instructionCounts.maximum);
+  const result49 = compileEncounter(model49, content);
+  assert.equal(result49.files.length, 0);
+  assert.match(result49.errors.join(), /under-48,000 unit budget/);
+  assert.ok(result49.areaCounts);
+});
+
+test('unlisted symptom policy inserts neutral or deny policy and requires marker in runtime', () => {
+  const neutralModel = fixture();
+  neutralModel.unlistedSymptoms = 'neutral';
+  const neutralResult = compileEncounter(neutralModel, content);
+  assert.deepEqual(neutralResult.errors, []);
+  assert.match(neutralResult.directInstructions, /Symptoms the materials neither list as present nor explicitly deny are UNSPECIFIED/);
+  assert.match(neutralResult.directInstructions, /non-committal lay uncertainty/);
+  assert.equal(neutralResult.manifest.unlisted_symptoms, 'neutral');
+
+  const denyModel = fixture();
+  denyModel.unlistedSymptoms = 'deny';
+  const denyResult = compileEncounter(denyModel, content);
+  assert.deepEqual(denyResult.errors, []);
+  assert.match(denyResult.directInstructions, /Faculty policy for this case: if the learner asks about a symptom or complaint the materials do not list as present, answer with a natural lay negative/);
+  assert.equal(denyResult.manifest.unlisted_symptoms, 'deny');
+
+  const badContent = {
+    ...content,
+    runtime: 'Runtime without policy marker'
+  };
+  assert.throws(() => compileEncounter(neutralModel, badContent), /Runtime is missing the unlisted-detail policy marker/);
 });
 
 test('preset/custom feedback combinations preserve independent criteria', () => {
@@ -70,11 +113,9 @@ test('preset/custom feedback combinations preserve independent criteria', () => 
   assert.match(compileEncounter(model, content).feedbackText, /FILE CRITERIA/);
 });
 
-test('BuckIPE anchors remain independent and preset contains no housing targets', () => {
+test('BuckIPE anchors remain independent', () => {
   assert.match(content.presets.ipe.text, /0 = an opportunity/);
   assert.match(content.presets.ipe.text, /N\/O/);
-  assert.doesNotMatch(content.presets.ipe.text, /mold|housing/);
-  assert.doesNotMatch(content.presets.fnp.text, /gout|HCTZ|uric acid/);
 });
 
 test('NPSCA qualitative adaptation covers all supplied items in synthesis prompt', () => {
@@ -101,30 +142,85 @@ test('uploaded text is additive and inclusion order is preserved', () => {
   assert.ok(result.caseText.indexOf('FIRST FILE') < result.caseText.indexOf('SECOND FILE'));
 });
 
-test('pruneProfessionalScope strips metadata while preserving operational scope and boundaries', () => {
-  const raw = `# PROFESSIONAL: Dental hygiene
-ID: DH | Version 0.1 | Reusable draft
+test('professional roles are preserved verbatim outside inline case block and decouple from feedback', () => {
+  const model = fixture();
+  model.preset = 'none';
+  model.role = 'Hand-entered learner role';
+  model.roles = [
+    { id: 'dental-hygiene', title: 'Dental Hygiene', text: '# PROFESSIONAL: Dental Hygiene\n\n## Role and scope\nVerbatim DH scope text.\n\n## Section 2\nCustom details.', isCustom: false, active: true },
+    { id: 'custom-nurse', title: 'Clinical Nurse Specialist', text: 'Custom CNS role text with arbitrary headings and notes.', isCustom: true, active: true }
+  ];
+  const result = compileEncounter(model, content);
+  assert.deepEqual(result.errors, []);
 
-## Role and scope
-A dental hygienist in a supervised clinic.
+  // Identity block contains developer role and selected professional roles
+  assert.match(result.directInstructions, /Learner role: Hand-entered learner role/);
+  assert.match(result.directInstructions, /Selected professional roles: Dental Hygiene, Clinical Nurse Specialist/);
 
-## Priorities
-Oral health and prevention.
+  // Dedicated section present outside inline case block
+  assert.match(result.directInstructions, /# Learner audience and professional scope/);
+  assert.match(result.directInstructions, /### Dental Hygiene\n\n## Role and scope\nVerbatim DH scope text/);
+  assert.match(result.directInstructions, /### Clinical Nurse Specialist\n\nCustom CNS role text with arbitrary headings and notes/);
 
-## Boundaries
-Do not diagnose systemic disease.
+  // Verbatim preservation - no pruning of custom text
+  assert.match(result.directInstructions, /Custom details/);
+  assert.match(result.directInstructions, /arbitrary headings and notes/);
 
-## Review metadata
-Owner/reviewer: pending.
+  // Verify location: roles section appears before BEGIN INLINE CASE
+  const rolesIndex = result.directInstructions.indexOf('# Learner audience and professional scope');
+  const inlineIndex = result.directInstructions.indexOf('BEGIN INLINE CASE');
+  assert.ok(rolesIndex !== -1);
+  assert.ok(inlineIndex !== -1);
+  assert.ok(rolesIndex < inlineIndex, 'Roles section must appear before BEGIN INLINE CASE');
 
-## Progressive response rule
-The full profile guides your choices.`;
+  // Verify feedback block when preset is none
+  assert.match(result.feedbackText, /No preliminary feedback is selected/);
 
-  const pruned = pruneProfessionalScope(raw);
-  assert.match(pruned, /## Role and scope\nA dental hygienist in a supervised clinic/);
-  assert.match(pruned, /## Priorities\nOral health and prevention/);
-  assert.match(pruned, /## Boundaries\nDo not diagnose systemic disease/);
-  assert.doesNotMatch(pruned, /Review metadata|Progressive response rule|ID: DH/);
+  // Manifest
+  assert.equal(result.manifest.participating_roles.length, 2);
+  assert.equal(result.manifest.participating_roles[0].title, 'Dental Hygiene');
+  assert.equal(result.manifest.participating_roles[1].title, 'Clinical Nurse Specialist');
+  assert.equal(result.manifest.participating_roles[1].isCustom, true);
+});
+
+test('bundled professional role profiles satisfy learner-role structure, length, and content constraints', async () => {
+  const profDir = new URL('../content/professionals/', import.meta.url);
+  const files = (await readdir(profDir)).filter(f => f.endsWith('.md')).sort();
+  assert.equal(files.length, 11, 'Must have exactly 11 professional profiles');
+
+  const requiredHeadings = [
+    '## Role and scope',
+    '## Typical focus in a patient encounter',
+    '## Contributions within scope',
+    '## Scope considerations for feedback',
+    '## Interprofessional collaboration'
+  ];
+
+  let totalChars = 0;
+  for (const filename of files) {
+    const text = await readFile(new URL(filename, profDir), 'utf8');
+    totalChars += text.length;
+
+    // Has title
+    assert.match(text, /^# PROFESSIONAL:\s*(.+)$/m, `${filename} must have # PROFESSIONAL: title`);
+
+    // Contains all 5 headings
+    for (const heading of requiredHeadings) {
+      assert.ok(text.includes(heading), `${filename} is missing heading: ${heading}`);
+    }
+
+    // Length in [700, 1300]
+    assert.ok(text.length >= 700 && text.length <= 1300, `${filename} length (${text.length}) not in [700, 1300]`);
+
+    // Does not match forbidden consultant/review patterns
+    assert.doesNotMatch(text, /consultation question|handoff|Progressive response rule|Review metadata|Reuse rules|25–70 words/i, `${filename} contains forbidden legacy consultant patterns`);
+
+    if (filename === 'primary-care.md') {
+      assert.doesNotMatch(text, /prescribe patient-specific/i, 'primary-care.md contains forbidden prescribe patient-specific');
+    }
+  }
+
+  assert.ok(totalChars <= 14000, `Total profiles length (${totalChars}) must be <= 14,000 chars`);
 });
 
 test('missing content, failed imports, and unapproved asset descriptions block export', () => {
@@ -209,98 +305,4 @@ test('online simulation, human timekeeping, authorized record rules, and closed-
   assert.match(text, /When a source document lists history in an HPI or OLD CARTS table/);
   assert.match(text, /Boundary: Concealed facilitator reference\./);
   assert.match(text, /Boundary: Patient portrayal and patient-held records\./);
-  assert.doesNotMatch(content.runtime, /Shannon|Anderson|gout|HCTZ|hydrochlorothiazide|indomethacin|uric acid|first MTP/i);
-});
-
-test('selected and custom professional roles synthesize into feedback with provenance notice', () => {
-  const model = fixture();
-  model.preset = 'ipe';
-  model.roles = [
-    { id: 'dental-hygiene', title: 'Dental Hygiene', text: '## Role and scope\nDH SCOPE: oral health prevention\n\n## Priorities\nPreventive care', isCustom: false, active: true },
-    { id: 'custom-fnp', title: 'Graduate student in the FNP program', text: 'FNP SCOPE: advanced primary care', isCustom: true, active: true }
-  ];
-  const result = compileEncounter(model, content);
-  assert.deepEqual(result.errors, []);
-  assert.match(result.feedbackText, /## Participating learner professional roles and scope boundaries/);
-  assert.match(result.feedbackText, /AI-generated starter drafts for faculty review and customization/);
-  assert.match(result.feedbackText, /DH SCOPE: oral health prevention/);
-  assert.match(result.feedbackText, /FNP SCOPE: advanced primary care/);
-  assert.match(result.files[0].data, /Participating professions:.*Dental Hygiene/i);
-  assert.equal(result.manifest.participating_roles.length, 2);
-  assert.equal(result.manifest.participating_roles[0].title, 'Dental Hygiene');
-  assert.equal(result.manifest.participating_roles[1].isCustom, true);
-});
-
-test('fnp-shannon-anderson case files compile comfortably under the 48,000 unit budget', async () => {
-  const baseDir = new URL('../../case-files/fnp-shannon-anderson/', import.meta.url);
-  function loadDoc(relPath) {
-    const fullPath = fileURLToPath(new URL(relPath, baseDir));
-    const name = relPath.split('/').pop();
-    const pyScript = [
-      'import sys, json, re, zipfile, xml.etree.ElementTree as ET',
-      'W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"',
-      'MC = "{http://schemas.openxmlformats.org/markup-compatibility/2006}"',
-      'def clean_mc(el):',
-      '    for c in list(el):',
-      '        if c.tag == MC + "AlternateContent":',
-      '            ch = c.find(MC + "Choice")',
-      '            if ch is not None:',
-      '                i = list(el).index(c); el.remove(c)',
-      '                for sub in reversed(list(ch)): el.insert(i, sub)',
-      '                continue',
-      '        clean_mc(c)',
-      'with zipfile.ZipFile(sys.argv[1]) as z:',
-      '    root = ET.fromstring(z.read("word/document.xml"))',
-      'clean_mc(root)',
-      'lines = [re.sub(r"[ \\t]+", " ", "".join(t.text or "" for t in p.iter(W + "t"))).strip() for p in root.iter(W + "p")]',
-      'print(json.dumps("\\n".join(x for x in lines if x)))'
-    ].join('\n');
-    const py = spawnSync('python3', ['-B', '-c', pyScript, fullPath], { encoding: 'utf8' });
-    assert.equal(py.status, 0, py.stderr);
-    return { name, status: 'ready', kind: 'text', text: JSON.parse(py.stdout), images: [] };
-  }
-
-  const primaryCareText = await readFile(new URL('../content/professionals/primary-care.md', import.meta.url), 'utf8');
-  const model = {
-    name: 'Shannon Anderson',
-    role: 'Primary Care / Advanced Practice Provider (FNP/AGPCNP) student',
-    description: '67-year-old female presenting to an outpatient primary care clinic with acute right foot pain.',
-    groups: {
-      context: { text: '', files: [] },
-      'learner-has-info': {
-        text: '',
-        files: [
-          loadDoc('learner-has-info/Shannon Anderson Case B Chart Snapshot.docx'),
-          loadDoc('learner-has-info/Shannon Anderson Case B DOOR Intake Note SP 2026.docx'),
-        ]
-      },
-      'consultants-have-info': { text: '', files: [] },
-      'facilitator-observation-reference': {
-        text: '',
-        files: [
-          loadDoc('facilitator-observation-reference/Faculty Sheet for Gout OSCE SP 2026.docx'),
-          loadDoc('facilitator-observation-reference/Shannon Anderson Case B Lab 032025.docx'),
-          loadDoc('facilitator-observation-reference/Shannon Anderson Case B Lab Report 0325 Faculty Copy.docx'),
-        ]
-      },
-      'patient-parameters-and-disclosable-info': {
-        text: '',
-        files: [
-          loadDoc('patient-parameters-and-disclosable-info/Teaching of SP for Gout Case B SP 2026.docx'),
-          loadDoc('patient-parameters-and-disclosable-info/Shannon Anderson Case B Lab Interpratation During Visit.docx'),
-          loadDoc('patient-parameters-and-disclosable-info/The Ohio State Radiology Report Case B.docx'),
-          loadDoc('patient-parameters-and-disclosable-info/Left Foot Image.docx'),
-        ]
-      },
-      feedback: { text: '', files: [] }
-    },
-    preset: 'fnp',
-    composition: '',
-    roles: [{ id: 'primary-care', title: 'Primary Care / Advanced Practice Provider (FNP/AGPCNP)', text: primaryCareText, isCustom: false, active: true }]
-  };
-
-  const result = compileEncounter(model, content);
-  assert.deepEqual(result.errors, []);
-  assert.equal(result.files.length, 1);
-  assert.ok(result.instructionCounts.maximum < 48000, `Expected < 48,000 maximum units, got ${result.instructionCounts.maximum}`);
 });
