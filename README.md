@@ -1,38 +1,42 @@
-# Simulated patient builder and pipeline
+# Simulated Patient Authoring & Pipeline
 
-> **Current direction (October 27, 2026):** The browser builder ([simulated-patient-builder.html](web/dist/simulated-patient-builder.html)) is the only faculty workflow. It compiles a single instruction file for Carmen AI Assistant, with no terminal or Python steps. The Python CLI pipeline (`scripts/`, `pipeline/`, `packages/`) and the Shannon CLI outputs below are **legacy**: kept for reference and regression tests, not to be extended. Pending builder corrections: [IMPLEMENTATION-PROPOSAL-2026-10-27.md](IMPLEMENTATION-PROPOSAL-2026-10-27.md).
+> **Current direction (October 28, 2026):** Authoring simulated patient encounters for **Carmen AI Assistant** is powered by the **Gemini Authoring Skill** (`simulated-patient-experience`). The previous zero-inference browser web builder (`web/`) has been retired. The Python CLI pipeline (`scripts/`, `pipeline/`, `packages/`) and Shannon CLI reference outputs are retained for regression checks and baseline testing.
 
-A browser-local package builder plus a portable, faculty-review Shannon Anderson reference case for MSN Family Nurse Practitioner encounters. Students begin with a natural greeting. Runtime case revision: `2026-10-21-copilot-pilot-7`.
+---
 
-Open **[the standalone builder](web/dist/simulated-patient-builder.html)** directly
-in a current browser. No server or installation is needed to use the built HTML.
-It includes case/context inputs, the four material areas, separate FNP/Buckeye IPE
-presets, custom feedback, TXT/Markdown/DOCX extraction and selected-format downloads.
-Cases autosave locally, with resume, My cases, Start new case and portable editable
-case backups. See [the saving contract](LOCAL-CASE-STORAGE-PLAN.md). Stored image alt text can be reviewed and included as descriptions without image generation. Re-import Word sources to use the fallback/text-box extraction fixes.
-See [web/README.md](web/README.md) for supported formats, local build/test commands
-and limitations. `vercel.json` supports potential static hosting; nothing is deployed.
+## 1. Authoring with the Gemini Skill
 
-Both standard deployment formats now include OBSERVE demonstrations and source-grounded post-interaction summaries. See [SHANNON-LEARNING-TEST.md](SHANNON-LEARNING-TEST.md). Build with `python3 -B scripts/build-copilot-case.py`. Use the existing standalone file or base instructions plus case ZIP; no separate learning build is needed. Feedback is qualitative, without numeric grades or pass/fail.
+The authoring workflow uses the builder's Gemini quota (Gemini Skills or Google AI Studio) to ingest raw case documents, perform category mapping, dynamically synthesize learner scope, audit clinical gaps, and assemble a single instruction file strictly under the **48,000 maximum unit budget** for Carmen AI Assistant.
 
-Last verified October 27, 2026: all 65 Python tests, 18 web compiler/ZIP/metadata/case-storage tests and manifest/reference checks pass. Direct-file offline and static-HTTP Chromium workflows were checked with actual downloads. The standalone is 46,884 UTF-16 units; the ZIP has six members. Progressive disclosure, calm lay portrayal (no student assessment in dialogue), and direct patient-held record release are implemented. [HANDOFF.md](HANDOFF.md) is the consolidated current-state guide and includes a pasteable continuation prompt.
+- **Skill Package Archive:** Upload [`simulated-patient-experience.zip`](simulated-patient-experience.zip) into Gemini Skills.
+- **Skill Specification:** See [`authoring-skills/simulated-patient-experience/SKILL.md`](authoring-skills/simulated-patient-experience/SKILL.md).
+- **Locked Carmen Runtime:** Embeds [`references/carmen-runtime.md`](authoring-skills/simulated-patient-experience/references/carmen-runtime.md) and enforces [`references/prompt-structure.md`](authoring-skills/simulated-patient-experience/references/prompt-structure.md).
 
-- **Initial web builder plan:** [WEB-BUILDER-PLAN.md](WEB-BUILDER-PLAN.md) records the agreed single-session workflow, optional course context, feedback presets/custom criteria, Buckeye UX design and implementation sequence. The initial local app is implemented; its exported packages still need destination-host trials.
-- **Resume or move this project:** [HANDOFF.md](HANDOFF.md) records goals, decisions, current implementation, successful dialogue examples, limitations, and work still to do. Copy the whole project folder to continue editing elsewhere.
-- **Reusable pipeline direction:** [PIPELINE-DESIGN.md](PIPELINE-DESIGN.md) separates clinical cases from learner activities, profiles, facilitator intervention, and deployment. Shannon is the reference implementation; the shared compiler now supports explicit activity selection, with a native path checked using a synthetic case. Linda intake and real cross-case validation remain next.
-- **Current authoring inputs:** [pipeline/README.md](pipeline/README.md) explains activity-selected compilation, authoritative inputs, feedback selection and output packaging. Case text, metadata, visual references and export variants are supplied inputs; no Shannon-specific build adapter is used.
-- **Faculty and developer workflow:** [FACULTY-WORKFLOW.md](FACULTY-WORKFLOW.md) describes what to supply, how source documents become reviewed inputs, and includes an intake/release template.
-- **Configure a chat agent:** [COPILOT-SETUP.md](COPILOT-SETUP.md).
-- **Test and review encounters:** [TESTING.md](TESTING.md).
-- **Review unresolved source issues:** [faculty review notes](cases/case-b-author-review.md).
+### Functional Category Idiom
+Materials map into 6 functional categories using prefixes or conversational triage:
+1. `instructions-`: Activity parameters, setting, learner discipline(s), and training level.
+2. `learner-`: Pre-interaction briefing (door note, triage sheet, student handout, or chart snapshot).
+3. `patient-`: Patient portrayal, demographics, chief concern, and progressive disclosure history (attribute tables or domain prompts).
+4. `facilitator-`: Concealed clinical observations, physical exam findings, vital signs, and diagnostic lab/imaging panels.
+5. `consultant-`: Optional explicitly named simulated colleagues.
+6. `feedback-`: Post-encounter qualitative rubrics, IPE team care-plan challenges, or reflection questions.
 
-Use either [base instructions](copilot-agent-instructions.md) plus the [case ZIP](packages/fnp-shannon-anderson.zip), or the [single-file instructions](fnp-shannon-anderson-single-file.md) in a tool with a 50,000-character persistent instruction field. Do not combine both formats. Image display is not configured; patient-language text fallback is included.
+---
 
-Build and check with standard-library Python:
+## 2. Sample Case Materials
+
+Ready-to-use sample folders for testing the authoring skill:
+- **Focused Clinical / OSCE Case (Shannon Anderson):** [`sample-shannon-files/`](sample-shannon-files/) (10 prefixed files).
+- **Interprofessional / Complex Care Case (Linda Johnson):** [`sample-linda-files/`](sample-linda-files/) (Combined scenario, student handout, and BuckIPE framework).
+
+---
+
+## 3. Legacy Python Pipeline Verification
+
+The Python reference test suite remains active to verify regression baselines:
 
 ```sh
-python3 -B scripts/build-simulation.py --activity pipeline/activities/fnp-telehealth-practice/activity.json
 python3 -B -m unittest discover -s tests -v
 ```
 
-The handoff contains instructor-only context; do not paste it into the patient agent or share it as a learner briefing. Local checks do not establish live model behavior or clinical validation.
+All 65 tests pass.

@@ -1,12 +1,9 @@
 {
-  "name": "simulated-patient-builder",
-  "version": "0.1.0",
+  "name": "simulated-patient-authoring",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node web/build.mjs",
-    "test": "node --test web/tests/*.test.mjs",
-    "preview": "node web/serve.mjs"
-  },
-  "engines": { "node": ">=22" }
+    "test": "python3 -B -m unittest discover -s tests"
+  }
 }
