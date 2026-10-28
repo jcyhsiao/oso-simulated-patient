@@ -1,83 +1,45 @@
-# Faculty and developer workflow
+# Faculty Authoring Workflow: Carmen AI Assistant
 
-> **Legacy (October 27, 2026):** The Python CLI pipeline is kept for reference and its existing regression tests only. It is not the faculty workflow and should not be extended. Faculty and faculty developers use the browser builder ([simulated-patient-builder.html](web/dist/simulated-patient-builder.html)), which compiles a single instruction file for Carmen AI Assistant. See [web/README.md](web/README.md).
+> **Current direction (October 28, 2026):** Faculty and instructional builders author simulated patient encounters using the **Gemini Authoring Skill** ([`simulated-patient-experience.zip`](simulated-patient-experience.zip)). The former zero-inference web builder (`web/`) was retired. The Python CLI pipeline (`scripts/`, `pipeline/`, `packages/`) is legacy and kept for regression reference.
 
-The faculty member supplies and reviews the educational case; the developer or authoring assistant turns it into structured inputs, builds the package and checks it. Faculty can continue using Word documents, reports and images. Faculty does not need to write JSON. There is no automated arbitrary-document importer or faculty form application yet.
+---
 
-## What faculty supplies
+## 1. What Faculty Supplies
 
-| Material | What it must establish | How to supply it |
-|---|---|---|
-| Clinical case | Person, concern, symptoms, history, explicit negatives, patient understanding and concerns; identify unspecified facts | Existing SP teaching sheet or narrative; supporting chart |
-| Learner briefing | Exactly what learners know before starting | Door/intake note, chart snapshot or a marked section of the case packet |
-| Findings and records | Exact findings, values, units, dates, report wording and images; historical versus encounter context | Original reports, examination sheet and original image files |
-| Activity brief | Profession, program, learner stage, course objectives, setting, task, permitted resources, completion expectations and any time limit | A short written brief; use the intake template below |
-| Release decisions | Who holds each record, what is preprovided, and when/how additional information may be given | Annotated report list or completed release table |
-| Facilitator intervention rules | Observable dead-end/off-track trigger, allowed alternatives, authorized guidance, repeat limits and consequences | Explicit rules in the faculty package; leave unspecified if not yet decided |
-| Assessment and debrief | Actual instrument/version, criteria and scoring instructions if assessment is intended; when feedback is available | Faculty rubric and debrief guide, separately marked as concealed |
-| Review decisions | Resolution of contradictions, approved portrayal/variants and authorization for the intended use | Written decisions linked to source issues and a reviewed version |
+Faculty can supply materials in their existing formats (Word documents, PDFs, clinic notes, rubrics, or pasted text). Documents can be supplied as **separate files** or as a **single master document**.
 
-One comprehensive faculty document can contain all of these. Separate files are convenient but not required. Mark sections by audience and intended release. Faculty retains access to the complete case, including material the facilitator may give the learner as needed. The developer derives role-specific views without removing faculty visibility.
+Simulation content maps into 6 functional categories:
 
-## Working sequence
+| Prefix / Category | What It Contains | How Faculty Supplies It |
+| :--- | :--- | :--- |
+| `instructions-` | Activity parameters, clinical setting, intended learner discipline(s), training level, and learning objectives. | Syllabus excerpt, assignment prompt, or a brief narrative. |
+| `learner-` | Information the student receives *before* entering the room (door note, triage sheet, initial vitals, baseline chart, or student handout). | Door intake note or chart snapshot. |
+| `patient-` | Patient portrayal: demographics, chief concern, disclosable history (HPI attributes or *"If asked about..."* domain prompts), lifestyle, and patient-held reports. | SP teaching sheet, acting script, or patient narrative. |
+| `facilitator-` | Concealed findings released only if examined or ordered (physical exam observations, concealed labs, imaging reports). | Faculty clinical sheet, lab printouts, or radiology reports. |
+| `consultant-` *(optional)* | Information for explicitly named simulated colleagues (e.g. pharmacy consult note). Leave empty if there are no simulated colleagues. | Specialist consult note (empty if none). |
+| `feedback-` *(optional)* | Post-encounter qualitative evaluation criteria, OSCE checklists, IPE team challenges, or reflection prompts. | Faculty rubric, checklist, or competency framework. |
 
-Keep the four existing source folders as the base organization. Add `other-activity-parameters` for syllabus, OSCE directions, rubrics or other supporting documents, in faculty's existing formats. The intake table below is an optional developer review aid, not a required submission format. Organize the assembled experience into experience template, course context, activity/assessment and clinical case; one source can inform several levels.
+---
 
-1. Place original materials under `case-files/<case-name>/`, preserving originals. Existing audience folders are useful. Supply the activity brief and a source list; identify anything missing rather than filling gaps with plausible facts.
-2. Developer/assistant inventories the documents and identifies facts, learner-visible material, releasable evidence, concealed expectations and conflicts. Faculty reviews the issues that require clinical or educational judgment.
-3. Developer/assistant creates case components and activity bindings. Case facts and record dates are kept separate from the activity's release conditions. A new activity may reuse the clinical case after review of its briefing, available findings, scope and expectations.
-4. Faculty reviews readable assembled materials, the release table and any intervention/assessment rules. Do not ask faculty to approve raw JSON as a substitute for reviewing the learner/patient/facilitator experience. A formal approval UI and automatic comprehensive review export are not implemented.
-5. Developer builds and runs local validation. Faculty and developer conduct live trials in the intended host, including requested findings, reasonable alternative approaches, closure and potential leakage. Automated equivalence checks do not establish realism or clinical validity.
-6. Faculty/institution approves the reviewed version and destination access for intended use. Developer replaces the deployment artifacts and retains the version and review record. The current build does not enforce a formal release-approval gate or provision a learner link.
+## 2. Intake Workflow Options
 
-## Release example from Shannon
+### Option A: Prefixed Files (Fastest)
+Faculty prefix their filenames with the category tags (e.g., `learner-door-note.docx`, `patient-script.docx`, `facilitator-labs.docx`, `feedback-rubric.docx`, `instructions-context.docx`).
+- When uploaded to the Gemini Skill, Gemini automatically acknowledges the mapping, extracts facts, audits gaps, confirms the Unlisted Symptom Policy, and compiles the Carmen prompt immediately.
 
-The January 29, 2026 written X-ray remains the same clinical record across activities. In current FNP practice, Shannon holds it and matching requests or firm plans can release it under the existing policy. A different approved activity might put it in the initial learner chart. That changes access, not the report's date or contents. A new order must never convert the old report into a newly completed study.
+### Option B: Unmarked Files or Combined Documents (Interactive Triage)
+Faculty upload existing filenames (e.g., `Scenario.docx`, `Student_Handout.docx`, `Competencies.pdf`) or paste text into the chat.
+- The Gemini Skill parses the content and presents a **Proposed Information Mapping by Category** preview showing what specific information landed in each of the 6 categories.
+- The skill highlights pedagogical questions (such as whether vitals on a student handout belong in `learner-` upfront or `facilitator-` on demand) and pauses for confirmation before compiling.
 
-Requested scripted findings and records are normal information delivery. Instructional rescue is separate and requires a faculty-authored trigger. A missed assessment criterion alone is not a trigger. If intervention rules or a scoring instrument are unavailable, the current adapter does not enable those features.
+---
 
-## Current developer edit map
+## 3. Interactive Review & Compilation
 
-| Change | Author input |
-|---|---|
-| Clinical prose/components | `pipeline/cases/shannon-anderson/components.json` and active component/clinical paths |
-| Record identity, date, aliases and exact-content references | `pipeline/cases/shannon-anderson/records.json` |
-| Ownership, availability, result-release/discovery rules | `pipeline/activities/fnp-telehealth-practice/record-release.json` |
-| Activity composition and selected shared policies | `pipeline/activities/fnp-telehealth-practice/activity.json` and `policies/` |
-| Comprehensive faculty access and intervention draft | `pipeline/activities/fnp-telehealth-practice/facilitator.json` |
-| Approved visual clarification | `cases/case-b-visual-description.json` |
-
-`cases/case-b-diagnostic-records.json` is now a generated compatibility catalog used by the transcript reviewer. Do not edit it directly. Earlier snapshot files and generated reference views are not authoring inputs. Some inline rules and Shannon-specific builder transformations still remain; the developer must reconcile those when changing affected content. This is an incremental reference pipeline, not proven multi-case automation.
-
-Developer checks from the project root:
-
-```sh
-python3 -B scripts/build-copilot-case.py
-python3 -B scripts/validate-pipeline.py
-python3 -B scripts/extract-reference-views.py --check
-python3 -B -m unittest discover -s tests
-```
-
-After an intentional, reviewed runtime change, regenerate reference views and update the relevant migration-baseline tests with change-specific expectations. A stale baseline is not permission to skip review.
-
-## Intake template for the next case or activity
-
-- Case name/version and source documents:
-- Profession, program, course and learner stage:
-- Intended use and learning objectives:
-- Setting and encounter date:
-- Learner task, permitted resources, time/completion expectations:
-- Information provided before the encounter:
-- Patient facts, concerns and communication portrayal:
-- Available records/findings and exact source content:
-
-| Record/finding | Date | Patient knows/holds it? | Learner already has it? | Release condition | Delivery role |
-|---|---|---|---|---|---|
-| [item] | [date or not supplied] | [yes/no/unknown] | [yes/no] | [request/order/other explicit rule] | [patient/facilitator] |
-
-- Authorized instructional intervention rules, or not yet supplied:
-- Assessment instrument and scoring policy, or formative practice without scoring:
-- Reflection/debrief timing and content:
-- Authored variants, or none:
-- Conflicts/missing facts requiring faculty decision:
-- Faculty reviewer, reviewed version and review status:
+1. **Category Information Preview:** Faculty reviews the information digest across the 6 categories.
+2. **Clinical Gap Audit:** Gemini flags any contradictory dates, unscripted vitals, or missing required facts.
+3. **Unlisted Symptom Policy:** Faculty confirms how the patient handles unmentioned symptoms:
+   - **Neutral (Default & Recommended):** Patient expresses lay uncertainty (*"Hmm, that's not something I've paid much attention to"*). Prevents false negatives from misleading clinical reasoning.
+   - **Deny:** Patient firmly answers *"No, I haven't noticed anything like that"*. Best for tightly scripted OSCE stations.
+4. **Final Export:** Gemini compiles a single Markdown code block strictly under **48,000 maximum units** embedding the locked Carmen runtime scaffolding.
+5. **Paste into Carmen:** Faculty copies the generated block with one click and pastes it directly into Carmen AI Assistant instructions.
