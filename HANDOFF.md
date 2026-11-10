@@ -3,6 +3,8 @@
 Updated October 28, 2026. Instructor/developer context only: do not paste this handoff into a patient agent or give it to learners. Paths are relative to this project so the entire folder can be moved. This document consolidates earlier incremental notes and describes the current state.
 
 > **Current direction (October 28, 2026):** The primary authoring workflow is the **Gemini Authoring Skill** ([`simulated-patient-experience.zip`](simulated-patient-experience.zip)). It uses the builder's own Gemini quota (in Gemini Skills or Google AI Studio) to ingest case materials, perform category mapping, dynamically synthesize learner scope, audit clinical gaps, and assemble a single instruction prompt strictly under the **48,000 maximum unit budget** for **Carmen AI Assistant**. The earlier zero-inference browser web builder (`web/`) was retired. The Python CLI pipeline (`pipeline/`, `scripts/`, `packages/`) is **legacy**: kept for reference and baseline regression tests (`npm test` runs all 65 Python unit tests).
+>
+> **Closure record (November 10, 2026):** The locked runtime (`PLANS AND CLOSURE`) now ends every encounter with one copy-and-paste four-backtick block containing the verbatim TRANSCRIPT and the FEEDBACK. This added 443 units to the scaffolding, which now measures about 12,700 of the 48,000-unit budget.
 
 ---
 
