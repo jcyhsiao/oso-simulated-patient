@@ -43,3 +43,4 @@ Faculty upload existing filenames (e.g., `Scenario.docx`, `Student_Handout.docx`
    - **Deny:** Patient firmly answers *"No, I haven't noticed anything like that"*. Best for tightly scripted OSCE stations.
 4. **Final Export:** Gemini compiles a single Markdown code block strictly under **48,000 maximum units** embedding the locked Carmen runtime scaffolding.
 5. **Paste into Carmen:** Faculty copies the generated block with one click and pastes it directly into Carmen AI Assistant instructions.
+6. **Collect the Record:** When the learner ends the encounter (e.g., END ENCOUNTER), Carmen gives a farewell and then one copyable block with the full transcript and preliminary feedback, ready to paste into a submission or faculty review.
